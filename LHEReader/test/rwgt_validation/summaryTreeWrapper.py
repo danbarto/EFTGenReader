@@ -733,6 +733,7 @@ ALL_INFO = [
         'c_wl': [],
         'r_wl': ["run0"],
     },
+
     #### Round 6 FP samples ####
     {# HanModelV4 Round 6, (batch depends on HADOOP_BASE_PATH) FP samples:
         #'tag': 'ttXjet-mAOD', # Batch1 (ttZ, ttW)
@@ -793,6 +794,7 @@ ALL_INFO = [
         'basepath' : "/hadoop/store/user/kmohrman/summaryTree_LHE/FP/Round6/Batch7/",
     },
     ############################
+
     {# HanModelV4 ttHJet dedicated ctG=[-3,3] axis scan ####### AXIS SCAN #######
         'tag': 'ttHJet_HanV4ctGAxisScan_analysisEtaCut-GEN',
         'grp_name': '',
@@ -946,8 +948,8 @@ ALL_INFO = [
         'tag': 'ttX-ttXJet_HanV4_QED1-and-noConstraints_moreStats-goodStartPt-GEN',
         'grp_name': '',
         'version': 'v1',
-        'include': True,
-        #'include': False,
+        #'include': True,
+        'include': False,
         #'p_wl': [],
         #'p_wl': ["ttH"],
         'p_wl': ["ttHJet"],
@@ -1001,7 +1003,7 @@ ALL_INFO = [
         #'include': True,
         'include': False,
         'p_wl': [],
-        'c_wl': [],
+        'c_wl': ["testUpdateGenprodHanV4"],
         'r_wl': [],
         'basepath' : "/hadoop/store/user/kmohrman/summaryTree_LHE/FullR2Studies/PreliminaryStudies/",
     },
@@ -1009,10 +1011,66 @@ ALL_INFO = [
         'tag': 'ttHJet_testOldGenprod-testModels-GEN',
         'grp_name': '',
         'version': 'v1',
+        #'include': True,
+        'include': False,
+        'p_wl': [],
+        'c_wl': [],
+        'r_wl': [],
+        'basepath' : "/hadoop/store/user/kmohrman/summaryTree_LHE/FullR2Studies/PreliminaryStudies/",
+    },
+    {# ttXJet, tXq: All five signal processes from TOP-19-001, but with new genprod and new dim6Top
+        'tag': 'ttXJet-tXq_testUpdateGenproddim6TopMay20GST-testAllProcs-GEN',
+        'grp_name': '',
+        'version': 'v1',
         'include': True,
         #'include': False,
         'p_wl': [],
         'c_wl': [],
+        'r_wl': [],
+        'basepath' : "/hadoop/store/user/kmohrman/summaryTree_LHE/FullR2Studies/PreliminaryStudies/",
+    },
+    {# ttbar and ttbar+j samples with three different starting points with new dim6Top with new genprod to check WC dependence
+        'tag': 'ttbar-ttbarJet_newGenprodNewDim6Top_testBkgDependence-GEN',
+        'grp_name': '',
+        'version': 'v1',
+        #'include': True,
+        'include': False,
+        'p_wl': [],
+        'c_wl': [],
+        'r_wl': ["run2"],
+        'basepath' : "/hadoop/store/user/kmohrman/summaryTree_LHE/FullR2Studies/PreliminaryStudies/",
+    },
+    {# ttXJet, tXq: All five signal processes from TOP-19-001, but with new genprod and new dim6Top, BUT with MG 2.6.0
+        'tag': 'ttXJet-tXq_testUpdateGenprodMG260dim6TopMay20GST-testAllProcs-GEN',
+        'grp_name': '',
+        'version': 'v1',
+        #'include': True,
+        'include': False,
+        'p_wl': [],
+        'c_wl': [],
+        'r_wl': [],
+        'basepath' : "/hadoop/store/user/kmohrman/summaryTree_LHE/FullR2Studies/PreliminaryStudies/",
+    },
+    {# tHq sample with old genprod framework and HanV4 for comparison to reference
+        'tag': 'tHq4f_testOldGenprod-HanV4-GEN',
+        'grp_name': '',
+        'version': 'v1',
+        #'include': True,
+        'include': False,
+        'p_wl': [],
+        'c_wl': [],
+        'r_wl': [],
+        'basepath' : "/hadoop/store/user/kmohrman/summaryTree_LHE/FullR2Studies/PreliminaryStudies/",
+    },
+    ### 1d samples ###
+    {# ttHJet, 1d scans for cptb (since we saw a discrepency) and cpt (for reference)
+        'tag': 'ttHJet_testGenprodVersions-dim6TopMat20GST-1dScans-cpt-cptb-GEN',
+        'grp_name': '',
+        'version': 'v1',
+        'include': False,
+        'p_wl': [],
+        #'c_wl': ["cptTestOldGenprodTestdim6TopMay20GSTAxisScan","cptbTestOldGenprodTestdim6TopMay20GSTAxisScan"],
+        'c_wl': ["cptV5TestUpdateGenprodTestdim6TopMay20GSTAxisScan","cptV6TestUpdateGenprodTestdim6TopMay20GSTAxisScan","cptbV4TestUpdateGenprodTestdim6TopMay20GSTAxisScan","cptbV2TestUpdateGenprodTestdim6TopMay20GSTAxisScan"],
         'r_wl': [],
         'basepath' : "/hadoop/store/user/kmohrman/summaryTree_LHE/FullR2Studies/PreliminaryStudies/",
     },
@@ -1045,6 +1103,7 @@ REF_TAGS = [
     # Axis scans (don't need to include as "True" in ALL_INFO)
     #'ttHJet_HanV4ctGAxisScan_analysisEtaCut-GEN'
     #'ttHJet_HanV4_cbW-AxisScan-withRwgt_smeftComp_QED1_QCD2_DIM62-GEN' # Note, the proc name is ttHJetSMEFTcomp, might need to take care of this in REF_PROCESS_MAP
+    #'ttHJet_testGenprodVersions-dim6TopMat20GST-1dScans-cpt-cptb-GEN'
 ]
 
 # Dictionary to map certain MG processes to another for use in finding reference samples
@@ -1052,7 +1111,7 @@ REF_PROCESS_MAP = {
     #'tllq4fMatchedNoHiggs': 'tllq',
     'ttHJet': 'ttH',
     'ttH': 'ttHJet',
-    'ttH': 'ttHJetSMEFTcomp'
+    #'ttH': 'ttHJetSMEFTcomp'
     #'ttlnuJet': 'ttlnu',
     #'tHq4fMatched': 'tHq',
     #'ttllNuNuJetNoHiggs': 'ttll'
@@ -1102,6 +1161,9 @@ def runByProcess():
                     proc = tup[1]
                 elif "tllq" in tup[1]:
                     proc = tup[1]
+                elif "ttbar" in tup[1]:
+                    #proc = tup[1]
+                    proc = "ttbar"
                 else:
                     print "\nError: Unknown process" , tup[1] , "exiting"
                     raise BaseException
@@ -1129,6 +1191,7 @@ def runByProcess():
 
         ref_dirs = []
         for rtag in REF_TAGS:
+            print "tag!" , rtag
             info_list = getInfoByTag(ALL_INFO,rtag)
             for info in info_list:
                 if "basepath" in info.keys():
@@ -1136,14 +1199,15 @@ def runByProcess():
                 else:
                     ref_path = os.path.join(HADOOP_BASE_PATH,info['tag'],info['version'])
                 search_proc = proc
-                #print "proc: " , proc , REF_PROCESS_MAP.keys()
+                print "proc: " , proc , REF_PROCESS_MAP.keys()
                 if REF_PROCESS_MAP.has_key(proc):
                     #search_proc = REF_PROCESS_MAP[process]
                     search_proc = REF_PROCESS_MAP[proc]
                 ref_dirs += getDirectories(ref_path,
                     p_wl=[search_proc],
-                    c_wl=[],
-                    r_wl=[]
+                    #c_wl=[],
+                    c_wl=info["c_wl"],
+                    r_wl=info["r_wl"]
                 )
         print "\nFile dirs:"
         for x in fdirs:
