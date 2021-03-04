@@ -331,3 +331,40 @@ TH2EFT* TH2EFT::Rebin(Int_t nbinsx, Double_t *x, Int_t nbinsy, Double_t* y)
 
     return h;
 }
+
+TH2D* TH2EFT::RebinSM(TH2D* hsm, Int_t nbinsx, Double_t *x, Int_t nbinsy, Double_t* y)
+{
+    TH2D *h = new TH2D(hsm->GetName(), hsm->GetTitle(), nbinsx, x, nbinsy, y);
+    for(int i = 0; i < hsm->GetNbinsX(); i++) {
+        for(int j = 0; j < hsm->GetNbinsY(); j++) {
+            int thisbin = hsm->FindBin(i, j);
+            int newbin = h->FindBin(i, j);
+            double thisval = hsm->GetBinContent(thisbin);
+            double thiserr = hsm->GetBinError(thisbin);
+            double newval = h->GetBinContent(newbin);
+            double newerr = h->GetBinError(newbin);
+            h->SetBinContent(newbin, thisval + newval);
+            h->SetBinError(newbin, sqrt(thiserr*thiserr + newerr*newerr));
+        }
+    }
+
+    //Handle overflow
+    int thisbin = hsm->FindBin(hsm->GetNbinsX()+1, hsm->GetNbinsY()+1);
+    int newbin = h->FindBin(h->GetNbinsX()+1, h->GetNbinsY()+1);
+    double thisval = hsm->GetBinContent(thisbin);
+    double thiserr = hsm->GetBinError(thisbin);
+    double newval = h->GetBinContent(newbin);
+    double newerr = h->GetBinError(newbin);
+    h->SetBinContent(newbin, thisval + newval);
+    h->SetBinError(newbin, sqrt(thiserr*thiserr + newerr*newerr));
+
+    //Handle underflow
+    thisval = hsm->GetBinContent(0);
+    thiserr = hsm->GetBinError(0);
+    newval = h->GetBinContent(0);
+    newerr = h->GetBinError(0);
+    h->SetBinContent(0, thisval + newval);
+    h->SetBinError(0, sqrt(thiserr*thiserr + newerr*newerr));
+
+    return h;
+}

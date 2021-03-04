@@ -34,6 +34,7 @@ class TH2EFT : public TH2D
         Double_t GetBinContent(Int_t binx, Int_t biny, WCPoint wc_pt);
         Double_t GetBinContent(Int_t bin, WCPoint wc_pt);
         TH2EFT* Rebin(Int_t nbinsx, Double_t *x, Int_t nbinsy, Double_t* y);
+        TH2D* RebinSM(TH2D* hsm, Int_t nbinsx, Double_t *x, Int_t nbinsy, Double_t* y);
         //TH2EFT* Scale(WCPoint wc_pt);
         void Scale(WCPoint wc_pt);
         void ScaleFits(double amt, Int_t axis);
