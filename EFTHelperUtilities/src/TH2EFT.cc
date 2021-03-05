@@ -297,7 +297,9 @@ TH2EFT* TH2EFT::Rebin(Int_t nbinsx, Double_t *x, Int_t nbinsy, Double_t* y)
     for(int i = 0; i < this->GetNbinsX(); i++) {
         for(int j = 0; j < this->GetNbinsY(); j++) {
             int thisbin = this->FindBin(i, j);
-            int newbin = h->FindBin(i, j);
+            double xbin = this->GetXaxis()->GetBinLowEdge(i);
+            double ybin = this->GetYaxis()->GetBinLowEdge(i);
+            int newbin = h->FindBin(xbin, ybin);
             double thisval = this->GetBinContent(thisbin);
             double thiserr = this->GetBinError(thisbin);
             double newval = h->GetBinContent(newbin);
