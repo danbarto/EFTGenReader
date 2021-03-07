@@ -15,7 +15,8 @@ username = "kmohrman"
 
 #RUN_SETUP = 'local'
 #RUN_SETUP = 'full_production'
-RUN_SETUP = 'mg_studies'
+#RUN_SETUP = 'mg_studies'
+RUN_SETUP = 'testing'
 
 input_version  = ""
 output_version = "v1"
@@ -23,7 +24,13 @@ output_version = "v1"
 grp_tag  = "" #"2019_04_19/ttX-ttXJet-HanV4Model-0Jetvs1JetTests"
 #out_tag  = "2020_03_03_addPSweights/ttHJet-HanV4cptAxisScan-withPSweights_anaEtaCut"
 #out_tag  = "2020_03_03_addPSweights/ttHJet-HanV4ctGAxisScan-withPSweights_anaEtaCut"
-out_tag  = "2020_03_03_addPSweights/ttHJet_HanV4_withRwgt_smeftComp_QED1_QCD2_DIM61"
+#out_tag  = "2020_03_03_addPSweights/ttHJet_HanV4_withRwgt_smeftComp_QED1_QCD2_DIM61"
+#out_tag  = "FullR2Studies/ULChecks/ttXJet-tXq_GEN_ULCheckUL18"
+#out_tag  = "FullR2Studies/ULChecks/ttHJet_dim6TopMay20GST-checkDIM6Syntaxes_UL17"
+#out_tag  = "FullR2Studies/ULChecks/ttXJet-tXq_dim6TopMay20GST-and-ECO_checkDIM6SQSyntax_UL17"
+#out_tag  = "FullR2Studies/ULChecks/ttHJet_dim6TopMay20GST-StartPtChecks_UL17"
+#out_tag  = "FullR2Studies/ULChecks/ttH-ttHJet_dim6TopMay20GST_JustctGctp-check-dim6syntaxes_UL17"
+out_tag  = "FullR2Studies/ULChecks/ttX-tXq_dim6TopMay20GST_testHiggsInterferenceWithLL_GEN_UL17"
 test_tag = "lobster_20180505_1440"      # If the input LHE files were also produced in 'local' running
 prod_tag = "Round1/Batch1"
 
@@ -41,6 +48,10 @@ if RUN_SETUP == 'local':
     output_path  = "/store/user/$USER/tests/lobster_%s" % (timestamp_tag)
     workdir_path = "/tmpscratch/users/$USER/tests/lobster_%s" % (timestamp_tag)
     plotdir_path = "~/www/lobster/tests/lobster_%s" % (timestamp_tag)
+elif RUN_SETUP == 'testing':
+    output_path  = "/store/user/$USER/tests/lobster_{tstamp}".format(tstamp=timestamp_tag)
+    workdir_path = "/tmpscratch/users/$USER/tests/lobster_{tstamp}".format(tstamp=timestamp_tag)
+    plotdir_path = "~/www/lobster/tests/lobster_{tstamp}".format(tstamp=timestamp_tag)
 elif RUN_SETUP == 'mg_studies':
     # For MadGraph test studies
     input_path   = "/store/user/%s/genOnly_step/%s/%s/" % (username,grp_tag,input_version)
@@ -59,17 +70,14 @@ else:
 input_path = "/store/user/"
 input_path_full = "/hadoop" + input_path
 dir_list = [
-            #os.path.join(input_path_full,"kmohrman/genOnly_step/2019_04_19/ttX-ttXJet-HanV4Model-0Jetvs1JetTests/v1"),
-            #os.path.join(input_path_full,"kmohrman/genOnly_step/2019_04_19/ttHJet-ttWJet_HanV4ttXJetStartPtChecks-xqcut10qCut19/v1"),
-            #os.path.join(input_path_full,"kmohrman/genOnly_step/2019_04_19/ttHJet-ttZJet_HanV4ttXJetStartPtChecks-xqcut10qCut19/v1"), # Has ttZjet run2,3
-            #os.path.join(input_path_full,"kmohrman/genOnly_step/2019_04_19/ttXJet_HanV4ttXJetStartPtChecks-xqcut10qCutTests/v1"),
-            #os.path.join(input_path_full,"kmohrman/genOnly_step/2019_04_19/tHq4f_HanV4tHqStartPtChecks-allRuns/v1"),
-            #os.path.join(input_path_full,"kmohrman/genOnly_step/2019_04_19/tllq4fNoSchanWNoHiggs0p_HanV4tHqStartPtChecks-allRuns/v1"),
-            #os.path.join(input_path_full,"kmohrman/genOnly_step/2019_04_19/ttHJet_HanV4xqcutTests/v1"),
-            #os.path.join(input_path_full,"kmohrman/genOnly_step/2019_04_19/ttHJet-HanV4cptAxisScan-withPSweights/v3"),
-            #os.path.join(input_path_full,"kmohrman/genOnly_step/2019_04_19/ttHJet-HanV4ctGAxisScan-withPSweights/v2"),
-            #os.path.join(input_path_full,"kmohrman/genOnly_step/2019_04_19/ttXJet_HanV4_semftComp_QED1_QCD2_DIM62/v4"),
-            os.path.join(input_path_full,"kmohrman/genOnly_step/2019_04_19/ttHJet_HanV4_withRwgt_smeftComp_QED1_QCD2_DIM61/v1"),
+            #os.path.join(input_path_full,"kmohrman/postLHE_step/FullR2Studies/ULChecks/ttXJet-tXq_testUpdateGenproddim6TopMay20GST_GEN_ULCheckUL16/v1"),
+            #os.path.join(input_path_full,"kmohrman/postLHE_step/FullR2Studies/ULChecks/ttXJet-tXq_testUpdateGenproddim6TopMay20GST_GEN_ULCheckUL16APV/v1"),
+            #os.path.join(input_path_full,"kmohrman/postLHE_step/FullR2Studies/ULChecks/ttXJet-tXq_testUpdateGenproddim6TopMay20GST_GEN_ULCheckUL17/v1"),
+            #os.path.join(input_path_full,"kmohrman/postLHE_step/FullR2Studies/ULChecks/ttXJet-tXq_testUpdateGenproddim6TopMay20GST_GEN_ULCheckUL18/v1"),
+            #os.path.join(input_path_full,"kmohrman/postLHE_step/FullR2Studies/ULChecks/ttHJet_dim6TopMay20GST-checkDIM6Syntaxes_UL17/v1"),
+            #os.path.join(input_path_full,"kmohrman/postLHE_step/FullR2Studies/ULChecks/ttXJet-tXq_dim6TopMay20GST-and-ECO_checkDIM6SQSyntax_UL17/v1"),
+            #os.path.join(input_path_full,"kmohrman/postLHE_step/FullR2Studies/ULChecks/ttH-ttHJet_dim6TopMay20GST_JustctGctp-check-dim6syntaxes_UL17/v1"),
+            os.path.join(input_path_full,"kmohrman/postLHE_step/FullR2Studies/ULChecks/ttX-tXq_dim6TopMay20GST_testHiggsInterferenceWithLL_GEN_UL17/v4"),
         ]
 
 storage = StorageConfiguration(
@@ -135,6 +143,7 @@ for idx,gen_dir in enumerate(gen_dirs):
     output = Workflow(
         label='output_{p}_{c}_{r}'.format(p=p,c=c,r=r),
         command='cmsRun EFTLHEReader_cfg.py',
+        sandbox=cmssw.Sandbox(release='../../../../../CMSSW_10_6_8'), # This file should be in CMSSW_10_6_8/src/EFTGenReader/LHEReader/test/lobster. TODO: Specify path in a better way.
         merge_size='1.0G',
         cleanup_input=False,
         dataset=Dataset(

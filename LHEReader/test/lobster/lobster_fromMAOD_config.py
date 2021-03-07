@@ -141,6 +141,7 @@ for idx,maod_dir in enumerate(maod_dirs):
     output = Workflow(
         label='output_{p}_{c}_{r}'.format(p=p,c=c,r=r),
         command=' '.join(cms_cmd),
+        sandbox=cmssw.Sandbox(release='../../../../../CMSSW_10_6_8'), # This file should be in CMSSW_10_6_8/src/EFTGenReader/LHEReader/test/lobster. TODO: Specify path in a better way.
         merge_size='1.0G',
         cleanup_input=False,
         dataset=Dataset(

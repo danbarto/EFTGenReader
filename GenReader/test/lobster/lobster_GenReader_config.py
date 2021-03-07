@@ -18,7 +18,8 @@ input_path = "/store/user/"
 
 out_ver = "v1"
 #tag = 'ttX-ttXJet_HanV4_nJets3orMoreLep_lepPt10-jetPt30_lepEta-jetEta_genOnly'
-tag = 'testing_nJets_plots_July27_2020/ttX_central_cutsComp-nJets_test_lepPt10-jetPt30_lepEta-jetEta'
+#tag = 'testing_nJets_plots_July27_2020/ttX_central_cutsComp-nJets_test_lepPt10-jetPt30_lepEta-jetEta'
+tag = 'FullR2Studies/ULChecks/ttHJet_startptchecks-dim6syntaxchecks_UL17'
 #tag = 'tllq4fNoSchanWNoHiggs0p_7p5mil_checks_ptEtaCuts'
 
 #master_label = 'EFT_LHE_{tstamp}'.format(tstamp=timestamp_tag)
@@ -80,15 +81,15 @@ samples = [
     #'ttHJet_HanV2Model-xqcut10qcut15',
     #'ttHJet_HanV2Model-xqcut10qcut19',
     #'ttHJet_HanV2Model-xqcut10qcut25',
-    ##'ttHJet_HanV4Model-xqcut10qcut15',
+    #'ttHJet_HanV4Model-xqcut10qcut15',
     'ttHJet_HanV4Model-xqcut10qcut19',
-    ##'ttHJet_HanV4Model-xqcut10qcut25',
-    ##'ttllNuNuJetNoHiggs_HanV4Model-xqcut10qcut15',
-    ##'ttllNuNuJetNoHiggs_HanV4Model-xqcut10qcut19',
-    ##'ttllNuNuJetNoHiggs_HanV4Model-xqcut10qcut25',
-    ##'ttlnuJet_HanV4Model-xqcut10qcut15',
-    ##'ttlnuJet_HanV4Model-xqcut10qcut19',
-    ##'ttlnuJet_HanV4Model-xqcut10qcut25',
+    #'ttHJet_HanV4Model-xqcut10qcut25',
+    #'ttllNuNuJetNoHiggs_HanV4Model-xqcut10qcut15',
+    #'ttllNuNuJetNoHiggs_HanV4Model-xqcut10qcut19',
+    #'ttllNuNuJetNoHiggs_HanV4Model-xqcut10qcut25',
+    #'ttlnuJet_HanV4Model-xqcut10qcut15',
+    #'ttlnuJet_HanV4Model-xqcut10qcut19',
+    #'ttlnuJet_HanV4Model-xqcut10qcut25',
     #'ttHJet_HanModel16DttllScanpointsxqcut10-qCut15',
     #'ttHJet_HanModel16DttllScanpointsxqcut10-qCut19',
     #'ttHJet_HanModel16DttllScanpointsxqcut10-qCut25',
@@ -156,6 +157,10 @@ samples = [
     #'ttZ_HanV4',    # (Private ttZ NOT ttll!)
     #'tHq4f_HanV4_GEN',
     #'tllq4fNoSchanWNoHiggs0p_HanV4_GEN',
+    #"ttHJet_dim6TopMay20GST_UL17_startPtChecks_DIM6EQ1_top19001-ttlnuJet-startpt", # Have not actually run this yet...
+    #"ttHJet_dim6TopMay20GST_UL17_startPtChecks_DIM6EQ1_top19001-ttHJet-startpt", # Have not actually run this yet...
+    #"ttHJet_dim6TopMay20GST_UL17_startPtChecks_DIM6EQ1_other-startpt", # Have not actually run this yet...
+    #"ttHJet_dim6TopMay20GST_UL17_startPtChecks_DIM6EQ1_top19001hi-startpt", # Have not actually run this yet...
 ]
 
 das_mode = False
@@ -238,6 +243,7 @@ for idx,sample_name in enumerate(samples):
     output = Workflow(
         label='output_{label}'.format(label=safe_label_name),
         command=' '.join(cms_cmd),
+        sandbox=cmssw.Sandbox(release='../../../../../CMSSW_10_6_8/'), # This file should be in CMSSW_10_6_8/src/EFTGenReader/GenReader/test/lobster. TODO: Specify path in a better way.
         cleanup_input=False,
         outputs=['output_tree.root'],
         merge_size=merge_size,  # Note: Lobster takes a very long time trying to merge large numbers of small files for some reason
