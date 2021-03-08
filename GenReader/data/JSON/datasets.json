@@ -1039,6 +1039,86 @@
     "loc": "/hadoop/store/user/awightma/postLHE_step/2019_04_19/ValidationHanModelPlusJet/v1/mAOD_step_ttHJet_HanModelNoDim6_run0", 
     "on_das": false
   }, 
+  "ttHJet_dim6TopMay20GST_UL17_startPtChecks_DIM6EQ1_other-startpt": {
+    "central_xsec": 0, 
+    "dataset": "", 
+    "datatier": "GEN", 
+    "description": "", 
+    "files_per_task": 5, 
+    "is_eft": true, 
+    "loc": "/hadoop/store/user/kmohrman/postLHE_step/FullR2Studies/ULChecks/ttHJet_dim6TopMay20GST-StartPtChecks_UL17/v1/gen_step_ttHJet_testDIM6EQ1dim6TopMay20GSTStartPtChecks_run3", 
+    "on_das": false
+  }, 
+  "ttHJet_dim6TopMay20GST_UL17_startPtChecks_DIM6EQ1_top19001-ttHJet-startpt": {
+    "central_xsec": 0, 
+    "dataset": "", 
+    "datatier": "GEN", 
+    "description": "", 
+    "files_per_task": 5, 
+    "is_eft": true, 
+    "loc": "/hadoop/store/user/kmohrman/postLHE_step/FullR2Studies/ULChecks/ttHJet_dim6TopMay20GST-StartPtChecks_UL17/v1/gen_step_ttHJet_testDIM6EQ1dim6TopMay20GSTStartPtChecks_run0", 
+    "on_das": false
+  }, 
+  "ttHJet_dim6TopMay20GST_UL17_startPtChecks_DIM6EQ1_top19001-ttlnuJet-startpt": {
+    "central_xsec": 0, 
+    "dataset": "", 
+    "datatier": "GEN", 
+    "description": "", 
+    "files_per_task": 5, 
+    "is_eft": true, 
+    "loc": "/hadoop/store/user/kmohrman/postLHE_step/FullR2Studies/ULChecks/ttHJet_dim6TopMay20GST-StartPtChecks_UL17/v1/gen_step_ttHJet_testDIM6EQ1dim6TopMay20GSTStartPtChecks_run1", 
+    "on_das": false
+  }, 
+  "ttHJet_dim6TopMay20GST_UL17_startPtChecks_DIM6EQ1_top19001hi-startpt": {
+    "central_xsec": 0, 
+    "dataset": "", 
+    "datatier": "GEN", 
+    "description": "", 
+    "files_per_task": 5, 
+    "is_eft": true, 
+    "loc": "/hadoop/store/user/kmohrman/postLHE_step/FullR2Studies/ULChecks/ttHJet_dim6TopMay20GST-StartPtChecks_UL17/v1/gen_step_ttHJet_testDIM6EQ1dim6TopMay20GSTStartPtChecks_run2", 
+    "on_das": false
+  }, 
+  "ttHJet_dim6TopMay20GST_UL17_startPtChecks_DIM6SQ_other-startpt": {
+    "central_xsec": 0, 
+    "dataset": "", 
+    "datatier": "GEN", 
+    "description": "", 
+    "files_per_task": 5, 
+    "is_eft": true, 
+    "loc": "/hadoop/store/user/kmohrman/postLHE_step/FullR2Studies/ULChecks/ttHJet_dim6TopMay20GST-StartPtChecks_UL17/v1/gen_step_ttHJet_testDIM6SQdim6TopMay20GSTStartPtChecks_run3", 
+    "on_das": false
+  }, 
+  "ttHJet_dim6TopMay20GST_UL17_startPtChecks_DIM6SQ_top19001-ttHJet-startpt": {
+    "central_xsec": 0, 
+    "dataset": "", 
+    "datatier": "GEN", 
+    "description": "", 
+    "files_per_task": 5, 
+    "is_eft": true, 
+    "loc": "/hadoop/store/user/kmohrman/postLHE_step/FullR2Studies/ULChecks/ttHJet_dim6TopMay20GST-StartPtChecks_UL17/v1/gen_step_ttHJet_testDIM6SQdim6TopMay20GSTStartPtChecks_run0", 
+    "on_das": false
+  }, 
+  "ttHJet_dim6TopMay20GST_UL17_startPtChecks_DIM6SQ_top19001-ttlnuJet-startpt": {
+    "central_xsec": 0, 
+    "dataset": "", 
+    "datatier": "GEN", 
+    "description": "", 
+    "files_per_task": 5, 
+    "is_eft": true, 
+    "loc": "/hadoop/store/user/kmohrman/postLHE_step/FullR2Studies/ULChecks/ttHJet_dim6TopMay20GST-StartPtChecks_UL17/v1/gen_step_ttHJet_testDIM6SQdim6TopMay20GSTStartPtChecks_run1", 
+    "on_das": false
+  }, 
+  "ttHJet_dim6TopMay20GST_UL17_startPtChecks_DIM6SQ_top19001hi-startpt": {
+    "central_xsec": 0, 
+    "dataset": "", 
+    "datatier": "GEN", 
+    "description": "", 
+    "files_per_task": 5, 
+    "is_eft": true, 
+    "loc": "/hadoop/store/user/kmohrman/postLHE_step/FullR2Studies/ULChecks/ttHJet_dim6TopMay20GST-StartPtChecks_UL17/v1/gen_step_ttHJet_testV2DIM6SQdim6TopMay20GSTStartPtChecks_run2", 
+    "on_das": false
+  }, 
   "ttH_HanModelEFTfixed": {
     "central_xsec": 0.5638, 
     "dataset": "", 
