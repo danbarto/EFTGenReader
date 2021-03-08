@@ -1022,8 +1022,8 @@ ALL_INFO = [
         'tag': 'ttXJet-tXq_testUpdateGenproddim6TopMay20GST-testAllProcs-GEN',
         'grp_name': '',
         'version': 'v1',
-        'include': True,
-        #'include': False,
+        #'include': True,
+        'include': False,
         'p_wl': [],
         'c_wl': [],
         'r_wl': [],
@@ -1074,6 +1074,128 @@ ALL_INFO = [
         'r_wl': [],
         'basepath' : "/hadoop/store/user/kmohrman/summaryTree_LHE/FullR2Studies/PreliminaryStudies/",
     },
+
+    ### UL samples (summary tree step made with 10_6_8) ###
+
+    { # Test UL 16 samples, all 5 processes
+        'tag': 'ttXJet-tXq_GEN_ULCheckUL16-GEN',
+        'grp_name': '',
+        'version': 'v6',
+        #'include': True,
+        'include': False,
+        'p_wl': [],
+        'c_wl': [],
+        'r_wl': [],
+        'basepath' : "/hadoop/store/user/kmohrman/summaryTree_LHE/FullR2Studies/ULChecks/",
+    },
+    { # Test UL 16APV samples, all 5 processes
+        'tag': 'ttXJet-tXq_GEN_ULCheckUL16APV-GEN',
+        'grp_name': '',
+        'version': 'v6',
+        #'include': True,
+        'include': False,
+        'p_wl': [],
+        'c_wl': [],
+        'r_wl': [],
+        'basepath' : "/hadoop/store/user/kmohrman/summaryTree_LHE/FullR2Studies/ULChecks/",
+    },
+    { # Test UL 17 samples, all 5 processes
+        'tag': 'ttXJet-tXq_GEN_ULCheckUL17-GEN',
+        'grp_name': '',
+        'version': 'v6',
+        #'include': True,
+        'include': False,
+        'p_wl': ["ttHJet","ttlnuJet","tllq4fNoSchanWNoHiggs0p","tHq4f"],
+        #'p_wl': ["ttHJet"],
+        #'p_wl': []
+        'c_wl': [],
+        'r_wl': [],
+        'basepath' : "/hadoop/store/user/kmohrman/summaryTree_LHE/FullR2Studies/ULChecks/",
+    },
+    { # Test UL 18 samples, all 5 processes
+        'tag': 'ttXJet-tXq_GEN_ULCheckUL17-GEN',
+        'grp_name': '',
+        'version': 'v6',
+        #'include': True,
+        'include': False,
+        'p_wl': [],
+        'c_wl': [],
+        'r_wl': [],
+        'basepath' : "/hadoop/store/user/kmohrman/summaryTree_LHE/FullR2Studies/ULChecks/",
+    },
+
+    # Checking dim6 syntaxes
+    { # (UL17) Checking the dim6^2 syntax for ttHJet
+        'tag': 'ttHJet_dim6TopMay20GST-checkDIM6Syntaxes_UL17-GEN',
+        'grp_name': '',
+        'version': 'v8',
+        #'include': True,
+        'include': False,
+        'p_wl': [],
+        'c_wl': [],
+        'r_wl': [],
+        'basepath' : "/hadoop/store/user/kmohrman/summaryTree_LHE/FullR2Studies/ULChecks/",
+    },
+    { # (UL17) Checking the dim6^2 syntax for all the processes (except ttll, which did not finish in time)
+        'tag': 'ttXJet-tXq_dim6TopMay20GST-and-ECO_checkDIM6SQSyntax_UL17-GEN',
+        'grp_name': '',
+        'version': 'v9',
+        #'include': True,
+        'include': False,
+        #'p_wl': ["ttHJet"],
+        'p_wl': [],
+        #'c_wl': ["testDIM6SQdim6TopMay20GST"],
+        'c_wl': [],
+        'r_wl': [],
+        'basepath' : "/hadoop/store/user/kmohrman/summaryTree_LHE/FullR2Studies/ULChecks/",
+    },
+    { # (UL17) Checking the dim6^2 syntax and dim6=1 syntaxes at various starting points
+        'tag': 'ttHJet_dim6TopMay20GST-StartPtChecks_UL17-GEN',
+        'grp_name': '',
+        'version': 'v1',
+        #'include': True,
+        'include': False,
+        'p_wl': [],
+        'c_wl': [],
+        'r_wl': [],
+        'basepath' : "/hadoop/store/user/kmohrman/summaryTree_LHE/FullR2Studies/ULChecks/",
+    },
+    { # (UL17) Checking the dim6^2 syntax and dim6=1 syntaxes at two starting points, drop ctG from gridpack
+        'tag': 'ttHJet_dim6TopMay20GST-ctG0-testForNegativeWgts-StartPtChecks_UL17-GEN',
+        'grp_name': '',
+        'version': 'v1',
+        #'include': True,
+        'include': False,
+        'p_wl': [],
+        'c_wl': [],
+        'r_wl': [],
+        'basepath' : "/hadoop/store/user/kmohrman/summaryTree_LHE/FullR2Studies/ULChecks/",
+    },
+    { # (UL17) Checking the dim6^2 syntax and dim6=1 syntaxes at two starting points, with JUST ctG and ctp in the gridpack
+        'tag': 'ttH-ttHJet_dim6TopMay20GST_JustctGctp-check-dim6syntaxes_UL17-GEN',
+        'grp_name': '',
+        'version': 'v1',
+        #'include': True,
+        'include': False,
+        'p_wl': [],
+        'c_wl': [],
+        'r_wl': [],
+        'basepath' : "/hadoop/store/user/kmohrman/summaryTree_LHE/FullR2Studies/ULChecks/",
+    },
+
+    # Checking H and ll interference
+    { # (UL17) Checking samples with H produced seperately to see if we are missing interferecne
+        'tag': 'ttX-tXq_dim6TopMay20GST_testHiggsInterferenceWithLL_GEN_UL17-GEN',
+        'grp_name': '',
+        'version': 'v2', ## NOTE: v4 is actually latest version, but in this case do nto use (it's empty)
+        'include': True,
+        #'include': False,
+        'p_wl': [],
+        'c_wl': [],
+        'r_wl': [],
+        'basepath' : "/hadoop/store/user/kmohrman/summaryTree_LHE/FullR2Studies/ULChecks/",
+    },
+
 ]
 
 # These are the tags to get the runs which should be used as reference points in the plotting
@@ -1157,7 +1279,7 @@ def runByProcess():
                     proc = "ttW"
                 elif "ttll" in tup[1] or "ttZ" in tup[1]:
                     proc = "ttZ"
-                elif "tHq" in tup[1]:
+                elif "tHq" in tup[1] or "tHTOllq" in tup[1]:
                     proc = tup[1]
                 elif "tllq" in tup[1]:
                     proc = tup[1]
