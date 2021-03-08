@@ -74,7 +74,17 @@ def main():
     #dir_loc , dir_list = dir_loc_procs, dir_list_procs
     #dir_loc , dir_list = dir_loc_ttHqCutScan , dir_list_ttHqCutScan
     #dir_loc , dir_list = dir_loc_ttHxqcutScan , dir_list_ttHxqcutScan
-    dir_loc , dir_list = dir_loc_ttHmissing5PV , dir_list_ttHmissing5PV
+    #dir_loc , dir_list = dir_loc_ttHmissing5PV , dir_list_ttHmissing5PV
+
+    ##################################
+
+    ## UL and dim6 syntax checks ##
+    dir_loc = '/hadoop/store/user/kmohrman/summaryTree_LHE/FullR2Studies/ULChecks/ttHJet_dim6TopMay20GST-StartPtChecks_UL17-GEN/v1/'
+    dir_list = [
+        ("output_ttHJet_testDIM6EQ1dim6TopMay20GSTStartPtChecks_run0", "ttHJet_DIM6Eq1_check_origttHStartPt"),
+        ("output_ttHJet_testDIM6SQdim6TopMay20GSTStartPtChecks_run0", "ttHJet_DIM6SQ_check_origttHStartPt"),
+    ]
+
 
     ##################################
 

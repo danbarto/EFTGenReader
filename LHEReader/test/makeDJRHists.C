@@ -377,6 +377,8 @@ void makeDJRHists(const TString & infile_spec, const TString & outfile, bool bas
     rwgt_dict["RefPt"] = std::make_pair("",0);
     rwgt_dict["ANPt"] = std::make_pair("",0);
     rwgt_dict["LitPt"] = std::make_pair("",0);
+    rwgt_dict["top19001hiPt"] = std::make_pair("",0);
+    rwgt_dict["otherPt"] = std::make_pair("",0);
 
     if ( ctGscan ) {
         string wc_name = "ctG";
@@ -428,10 +430,15 @@ void makeDJRHists(const TString & infile_spec, const TString & outfile, bool bas
     string ref_pt_str = "rwgt_ctW_-8.303849_ctp_64.337172_cpQM_45.883907_ctei_24.328689_ctli_24.43011_cQei_23.757944_ctZ_-6.093077_cQlMi_23.951426_cQl3i_21.540499_ctG_-3.609446_ctlTi_21.809598_cbW_49.595354_cpQ3_-51.106621_cptb_136.133729_cpt_-43.552406_ctlSi_-20.005026";
     string an_pt_str = "rwgt_ctW_-4.0_ctp_41.0_cpQM_29.0_ctei_7.0_ctli_8.0_cQei_7.0_ctZ_-4.0_cQlMi_7.0_cQl3i_-8.0_ctG_-2.0_ctlTi_-2.0_cbW_-5.0_cpQ3_-10.0_cptb_-18.0_cpt_-25.0_ctlSi_-9.0";
     string arxiv1901_pt_str = "rwgt_ctG_0.4_ctW_-1.8_cbW_3.1_ctZ_4.0_cptb_-27_cpQ3_5.8_cpQM_-3.5_cpt_18_ctp_-60";
+    string top19001_hi_str = "rwgt_ctp_44.26_cpQM_21.65_ctW_2.87_ctZ_3.15_ctG_1.18_cbW_4.95_cpQ3_3.48_cptb_12.63_cpt_12.31_cQl3i_8.97_cQlMi_4.99_cQei_4.59_ctli_4.82_ctei_4.86_ctlSi_6.52_ctlTi_0.84";
+    string otherpt_str = "rwgt_ctp_25.5_cpQM_-1.07_ctW_-0.58_ctZ_-0.63_ctG_-0.85_cbW_3.17_cpQ3_-1.81_cptb_0.13_cpt_-3.25_cQl3i_-4.2_cQlMi_0.74_cQei_-0.27_ctli_0.33_ctei_0.33_ctlSi_-0.07_ctlTi_-0.01";
+
     WCPoint* sm_pt = new WCPoint(sm_pt_str);
     WCPoint* ref_pt = new WCPoint(ref_pt_str); 
     WCPoint* an_pt = new WCPoint(an_pt_str);
     WCPoint* lit_pt = new WCPoint(arxiv1901_pt_str);
+    WCPoint* top19001hi_pt = new WCPoint(top19001_hi_str);
+    WCPoint* otherpt_pt = new WCPoint(otherpt_str);
     WCPoint* tmp_pt;
 
     // Set the base point: This is the point our scan changes values **with respect to** (either SM point, or ref point)
@@ -487,6 +494,14 @@ void makeDJRHists(const TString & infile_spec, const TString & outfile, bool bas
             orig_val = ref_pt->getStrength(rwgt_pair.first);
             tmp_pt = lit_pt;
             std::cout << "    Literature point" << std::endl;
+        } else if (rwgt_string_key == "top19001hiPt") {
+            orig_val = ref_pt->getStrength(rwgt_pair.first);
+            tmp_pt = top19001hi_pt;
+            std::cout << "    TOP19001hi point" << std::endl;
+        } else if (rwgt_string_key == "otherPt") {
+            orig_val = ref_pt->getStrength(rwgt_pair.first);
+            tmp_pt = otherpt_pt;
+            std::cout << "    other point" << std::endl;
         } else {
             orig_val = base_pt->getStrength(rwgt_pair.first); 
             tmp_pt = base_pt;
