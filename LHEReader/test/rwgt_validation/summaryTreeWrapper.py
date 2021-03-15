@@ -1188,12 +1188,107 @@ ALL_INFO = [
         'tag': 'ttX-tXq_dim6TopMay20GST_testHiggsInterferenceWithLL_GEN_UL17-GEN',
         'grp_name': '',
         'version': 'v2', ## NOTE: v4 is actually latest version, but in this case do nto use (it's empty)
+        #'include': True,
+        'include': False,
+        'p_wl': [],
+        'c_wl': [],
+        'r_wl': [],
+        'basepath' : "/hadoop/store/user/kmohrman/summaryTree_LHE/FullR2Studies/ULChecks/",
+    },
+    { # (UL17) Checking samples with H produced seperately to see if we are missing interferecne, v2 at different starting points
+        'tag': 'ttX-tXq_dim6TopMay20GST_testV2HiggsInterferenceWithLL_GEN_UL17-GEN',
+        'grp_name': '',
+        'version': 'v1',
+        #'include': True,
+        'include': False,
+        'p_wl': [],
+        'c_wl': [],
+        'r_wl': [],
+        'basepath' : "/hadoop/store/user/kmohrman/summaryTree_LHE/FullR2Studies/ULChecks/",
+    },
+    { # (UL17) Checking samples with H produced seperately to see if we are missing interferecne, the two samples above were both processed together here, just to make sure no differences
+        'tag': 'ttX-tXq_dim6TopMay20GST_testBothSetsOfSamplesTogetherHiggsInterferenceWithLL_GEN_UL17-GEN',
+        'grp_name': '',
+        'version': 'v1',
+        #'include': True,
+        'include': False,
+        'p_wl': [],
+        'c_wl': [],
+        'r_wl': [],
+        'basepath' : "/hadoop/store/user/kmohrman/summaryTree_LHE/FullR2Studies/ULChecks/",
+    },
+    { # (UL17) Checking samples with H produced seperately to see if we are missing interferecne, the two samples above were both processed together here, just to make sure no differences
+        'tag': 'ttX-tXq_dim6TopMay20GST_testBothSetsOfSamplesTogetherHiggsInterferenceWithLL-rerunLHE_GEN_UL17-GEN',
+        'grp_name': '',
+        'version': 'v1',
+        #'include': True,
+        'include': False,
+        'p_wl': [],
+        'c_wl': [],
+        'r_wl': [],
+        'basepath' : "/hadoop/store/user/kmohrman/summaryTree_LHE/FullR2Studies/ULChecks/",
+    },
+    { # (UL17) Remake ttHTOll sample with mll cut to be consistent wiht ttll samples
+        'tag': 'ttHTOll_testHiggsInterferenceWithllWithMMLL10dim6TopMay20GST_GEN_UL17-GEN',
+        'grp_name': '',
+        'version': 'v1',
+        #'include': True,
+        'include': False,
+        'p_wl': [],
+        'c_wl': [],
+        'r_wl': [],
+        'basepath' : "/hadoop/store/user/kmohrman/summaryTree_LHE/FullR2Studies/ULChecks/",
+    },
+
+    ### Full Run2 Validation Checks ###
+
+    { # (UL17) ttHJet, ttlnuJet, tllq, tHq (no ttllJet since it took too long...)
+        'tag': 'ttHJet-ttlnuJet-tllq-tHq_dim6TopMay20GST_all22WCsBaselineStartPtTOP19001_UL17-GEN',
+        'grp_name': '',
+        'version': 'v1',
+        #'include': True,
+        'include': False,
+        'p_wl': [],
+        'c_wl': [],
+        'r_wl': [],
+        'basepath' : "/hadoop/store/user/kmohrman/summaryTree_LHE/FullR2Studies/ValidationChecks/",
+    },
+    { # (UL17) ttllJet and ttbarjet followup on the sample above
+        'tag': 'ttllJet-ttbarJet_dim6TopMay20GST_all22WCsBaselineStartPtTOP19001_GEN_UL17-GEN',
+        'grp_name': '',
+        'version': 'v1',
         'include': True,
         #'include': False,
         'p_wl': [],
         'c_wl': [],
         'r_wl': [],
-        'basepath' : "/hadoop/store/user/kmohrman/summaryTree_LHE/FullR2Studies/ULChecks/",
+        'basepath' : "/hadoop/store/user/kmohrman/summaryTree_LHE/FullR2Studies/ValidationChecks/",
+    },
+
+    ### Pheno paper JHEP review checks ###
+
+    { # (UL17) ttW, ttWJet: Checking 1d cbW and cptb
+        'tag': 'ttW-ttWJet_cbW-cptb-1dChecks_dim6TopMay20GST_GEN_UL17-GEN',
+        'grp_name': '',
+        'version': 'v1',
+        #'include': True,
+        'include': False,
+        #'p_wl': ["ttW"],
+        'p_wl': ["ttWJet"],
+        'c_wl': [],
+        'r_wl': [],
+        'basepath' : "/hadoop/store/user/kmohrman/summaryTree_LHE/ForPhenoJhepReviewStudies/"
+    },
+    { # (UL17) ttWJet double check the qCut scans for the reviewer
+        'tag': 'ttWJet_sampleForDoubleCheckingQcut_dim6TopMay20GST_GEN_UL17-GEN',
+        'grp_name': '',
+        'version': 'v1',
+        #'include': True,
+        'include': False,
+        'p_wl': [],
+        'c_wl': [],
+        'r_wl': [],
+        'basepath' : "/hadoop/store/user/kmohrman/summaryTree_LHE/ForPhenoJhepReviewStudies/"
     },
 
 ]
@@ -1273,6 +1368,7 @@ def runByProcess():
         #print "\nThe current grouped dirs are:" , grouped_dirs , "\n"
         for tup,dirs in grouped_dirs.iteritems():
             if cleanName: # Note: This is also for grouping
+                '''
                 if "ttH" in tup[1]:
                     proc = "ttH"
                 elif "ttlnu" in tup[1] or "ttW" in tup[1]:
@@ -1291,6 +1387,8 @@ def runByProcess():
                     raise BaseException
             else:
                 proc = tup[1]
+            '''
+            proc = tup[1]  # Do not do any grouping
             if not all_grouped_file_dirs_dict.has_key(proc):
                 all_grouped_file_dirs_dict[proc] = []
             all_grouped_file_dirs_dict[proc].extend(dirs)
