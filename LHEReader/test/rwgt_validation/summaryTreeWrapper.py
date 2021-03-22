@@ -1246,8 +1246,8 @@ ALL_INFO = [
         'tag': 'ttHJet-ttlnuJet-tllq-tHq_dim6TopMay20GST_all22WCsBaselineStartPtTOP19001_UL17-GEN',
         'grp_name': '',
         'version': 'v1',
-        #'include': True,
-        'include': False,
+        'include': True,
+        #'include': False,
         'p_wl': [],
         'c_wl': [],
         'r_wl': [],
@@ -1281,6 +1281,17 @@ ALL_INFO = [
     },
     { # (UL17) ttWJet double check the qCut scans for the reviewer
         'tag': 'ttWJet_sampleForDoubleCheckingQcut_dim6TopMay20GST_GEN_UL17-GEN',
+        'grp_name': '',
+        'version': 'v1',
+        #'include': True,
+        'include': False,
+        'p_wl': [],
+        'c_wl': [],
+        'r_wl': [],
+        'basepath' : "/hadoop/store/user/kmohrman/summaryTree_LHE/ForPhenoJhepReviewStudies/"
+    },
+    { # (UL17) ttZJet double check the qCut scans for the reviewer
+        'tag': 'ttZJet_sampleForDoubleCheckingQcut_dim6TopMay20GST_GEN_UL17-GEN',
         'grp_name': '',
         'version': 'v1',
         #'include': True,
