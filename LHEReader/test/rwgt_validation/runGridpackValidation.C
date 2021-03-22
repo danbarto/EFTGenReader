@@ -473,9 +473,8 @@ void runit(TString output_name,TString input_rundirs_spec,TString ref_rundirs_sp
         last_entry = 100; // For testing
         std::cout << "Last_entry: " << last_entry << std::endl;
 
-        // Test LS stuff
-        int num_LS = 401;
-        //int num_LS = 11; // Testing
+        // ScaleByLSs
+        int num_LS = 101;
         std::set<int> unique_runs;
 
         int first_entry = 0;
@@ -508,9 +507,6 @@ void runit(TString output_name,TString input_rundirs_spec,TString ref_rundirs_sp
         chain.SetBranchAddress("genLep_pt2",&genLep_pt2_intree);
         chain.SetBranchAddress("genLep_pt3",&genLep_pt3_intree);
         chain.SetBranchAddress("genJet_pt4",&genJet_pt4_intree);
-
-        // Variables for 
-        int lumiBlock_first;
 
         // Set up the wc point string (depends a lot on the naming scheme)
         std::map<string,string> ref_pts_dict;
@@ -549,15 +545,7 @@ void runit(TString output_name,TString input_rundirs_spec,TString ref_rundirs_sp
             sw.lap("Get Entry");
 
             /*
-            // Check for LS info for just running over one block:
-            ////std::cout << lumiBlock_intree << std::endl;
-            ////if (i == first_entry){
-                ////lumiBlock_first = lumiBlock_intree;
-            ////}
-            ////if (lumiBlock_intree != lumiBlock_first){
-                ////std::cout << "Breanking the loop!" << std::endl;
-                ////break;
-            ////}
+            // ScaleByLSs: For running over a specific number of LSs, so that we can scale by the factor to get correct cross section. Usually used if not normalizing to SM.  //
             unique_runs.insert(lumiBlock_intree);
             if (unique_runs.size()+1 > num_LS) {
                 break;
@@ -565,7 +553,7 @@ void runit(TString output_name,TString input_rundirs_spec,TString ref_rundirs_sp
             */
 
             /*
-            //// ResidCheck ////
+            // ResidCheck: This was for checking the fit residuals to understand how precise the fit coeffs are //
             //int counter = 0;
             for (auto it = eftwgts_intree->begin(); it != eftwgts_intree->end(); it++ ){
                 std::string rwgt_str = it->first;
@@ -603,31 +591,27 @@ void runit(TString output_name,TString input_rundirs_spec,TString ref_rundirs_sp
 
         // Normalize to SM
         double SM_xsec_incl = inclusive_fit.evalPoint(&sm_pt);
-        inclusive_fit.scale(1.0/SM_xsec_incl); // TODO TODO TODO !!! Put SM norm back in if commented out for LS stuff!!!
+        inclusive_fit.scale(1.0/SM_xsec_incl); // TODO: Comment if not scaling to SM (e.g. for ScaleByLSs)
         /*
-        // TMP LS stuff
-        //inclusive_fit.scale(1.0/SM_xsec_incl); // TMP!!! do not norm to SM, LS stuff
-        inclusive_fit.scale(1.0/unique_runs.size()); // TMP!! LS stuff
-        //inclusive_fit.scale(1.0/500.0); // TMP!! To account for avg instead of sum weight
-        std::cout << "\n\nnormalizing to LS!!! " << unique_runs.size() << "\n\n" << std::endl;
+        // ScaleByLSs
+        inclusive_fit.scale(1.0/unique_runs.size());
+        //inclusive_fit.scale(1.0/500.0); // To account for avg instead of sum weight
+        std::cout << "\n\nScale by LSs: unique runs " << unique_runs.size() << "\n\n" << std::endl;
         */
 
-        ///* // Dump the fit functions
-        //std::vector<std::string> list_of_WC = {"ctG","ctW"};
+        // Dump the 1d fit functions to the screen
         std::vector<std::string> list_of_WC = {"ctp","cpQM","ctW","ctZ","ctG","cbW","cpQ3","cptb","cpt","cQl3i","cQlMi","cQei","ctli","ctei","ctlSi","ctlTi", "cQq13", "cQq83", "cQq11", "ctq1" , "cQq81", "ctq8" };
         std::cout << " " << std:: endl;
         for (std::string WC : list_of_WC){ 
-            //inclusive_fit.dump(false,153,WC);
             inclusive_fit.dump(false,276,WC);
             std::cout << " " << std:: endl;
         }
-        //*/
         
         // Normalize ref pt and add to list
         std::cout << "Is ref? " << is_ref << std::endl;
         if (is_ref) {
             //ref_fits.push_back(inclusive_fit); ???
-            ref_fit_pt.scale(1.0/SM_xsec_incl); // CHECK SM_xsec_incl vs SM_xsec_sel if making ref pts!!!!!!!
+            ref_fit_pt.scale(1.0/SM_xsec_incl);
             ref_pts.push_back(ref_fit_pt);
         }
 
