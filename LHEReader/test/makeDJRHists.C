@@ -68,8 +68,8 @@ std::vector<TH1EFT*> makeTH1EFTs(const char *name, TChain *tree, int djr_idx, st
     // Set max number of events for event loop
     //int max_events = -1; // Run over all events
     //int max_events = 30000; // Debug
-    //int max_events = 100000;
-    int max_events = 1000;
+    int max_events = 200000;
+    //int max_events = 100;
 
     Stopwatch sw;
     std::set<int> unique_runs;
@@ -379,6 +379,7 @@ void makeDJRHists(const TString & infile_spec, const TString & outfile, bool bas
     rwgt_dict["LitPt"] = std::make_pair("",0);
     rwgt_dict["top19001hiPt"] = std::make_pair("",0);
     rwgt_dict["otherPt"] = std::make_pair("",0);
+    rwgt_dict["all22Pt"] = std::make_pair("",0);
 
     if ( ctGscan ) {
         string wc_name = "ctG";
@@ -432,6 +433,7 @@ void makeDJRHists(const TString & infile_spec, const TString & outfile, bool bas
     string arxiv1901_pt_str = "rwgt_ctG_0.4_ctW_-1.8_cbW_3.1_ctZ_4.0_cptb_-27_cpQ3_5.8_cpQM_-3.5_cpt_18_ctp_-60";
     string top19001_hi_str = "rwgt_ctp_44.26_cpQM_21.65_ctW_2.87_ctZ_3.15_ctG_1.18_cbW_4.95_cpQ3_3.48_cptb_12.63_cpt_12.31_cQl3i_8.97_cQlMi_4.99_cQei_4.59_ctli_4.82_ctei_4.86_ctlSi_6.52_ctlTi_0.84";
     string otherpt_str = "rwgt_ctp_25.5_cpQM_-1.07_ctW_-0.58_ctZ_-0.63_ctG_-0.85_cbW_3.17_cpQ3_-1.81_cptb_0.13_cpt_-3.25_cQl3i_-4.2_cQlMi_0.74_cQei_-0.27_ctli_0.33_ctei_0.33_ctlSi_-0.07_ctlTi_-0.01";
+    string all22on_str = "rwgt_ctG_0.4_ctW_-1.8_cbW_3.1_ctZ_4.0_cptb_-27_cpQ3_5.8_cpQM_-3.5_cpt_18_ctp_-60_cQq13_1.3_cQq83_1.6_cQq11_7.4_ctq1_7.5_cQq81_7.8_ctq8_4.1_cQl3i_-9.67_cQlMi_4.99_cQei_4.59_ctli_4.82_ctei_4.86_ctlSi_6.52_ctlTi_0.84";
 
     WCPoint* sm_pt = new WCPoint(sm_pt_str);
     WCPoint* ref_pt = new WCPoint(ref_pt_str); 
@@ -439,6 +441,7 @@ void makeDJRHists(const TString & infile_spec, const TString & outfile, bool bas
     WCPoint* lit_pt = new WCPoint(arxiv1901_pt_str);
     WCPoint* top19001hi_pt = new WCPoint(top19001_hi_str);
     WCPoint* otherpt_pt = new WCPoint(otherpt_str);
+    WCPoint* all22on_pt = new WCPoint(all22on_str);
     WCPoint* tmp_pt;
 
     // Set the base point: This is the point our scan changes values **with respect to** (either SM point, or ref point)
@@ -502,6 +505,10 @@ void makeDJRHists(const TString & infile_spec, const TString & outfile, bool bas
             orig_val = ref_pt->getStrength(rwgt_pair.first);
             tmp_pt = otherpt_pt;
             std::cout << "    other point" << std::endl;
+        } else if (rwgt_string_key == "all22Pt") {
+            orig_val = ref_pt->getStrength(rwgt_pair.first);
+            tmp_pt = all22on_pt;
+            std::cout << "    all22on point" << std::endl;
         } else {
             orig_val = base_pt->getStrength(rwgt_pair.first); 
             tmp_pt = base_pt;

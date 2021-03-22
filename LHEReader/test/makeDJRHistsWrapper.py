@@ -40,6 +40,8 @@ def make_plots(sample_loc,output_fn):
 
 def main():
 
+    ##################################
+
     ### Directories for pheno paper ###
 
     # Nominal ttH, ttW, ttZ
@@ -76,14 +78,36 @@ def main():
     #dir_loc , dir_list = dir_loc_ttHxqcutScan , dir_list_ttHxqcutScan
     #dir_loc , dir_list = dir_loc_ttHmissing5PV , dir_list_ttHmissing5PV
 
+    ### For responding to the JHEP comments ###
+    #dir_loc = "/hadoop/store/user/kmohrman/summaryTree_LHE/ForPhenoJhepReviewStudies/ttWJet_sampleForDoubleCheckingQcut_dim6TopMay20GST_GEN_UL17-GEN/v1/"
+    #dir_list = [
+    #    ("output_ttWJet_HanV4goodStartPtqCut15_run1" , "ttWJet_xqcut10qCut15"),
+    #    ("output_ttWJet_HanV4goodStartPtqCut25_run1" , "ttWJet_xquct10qCut25"),
+    #    ("output_ttWJet_HanV4goodStartPtqCut19_run1" , "ttWJet_xqcut10qCut19"),
+    #]
+
+    dir_loc = "/hadoop/store/user/kmohrman/summaryTree_LHE/ForPhenoJhepReviewStudies/ttZJet_sampleForDoubleCheckingQcut_dim6TopMay20GST_GEN_UL17-GEN/v1/"
+    dir_list = [
+        ("output_ttZJet_HanV4goodStartPtqCut15_run2" , "ttZJet_xqcut10qCut15"),
+        ("output_ttZJet_HanV4goodStartPtqCut25_run2" , "ttZJet_xquct10qCut25"),
+        ("output_ttZJet_HanV4goodStartPtqCut19_run2" , "ttZJet_xqcut10qCut19"),
+    ]
+
     ##################################
 
     ## UL and dim6 syntax checks ##
-    dir_loc = '/hadoop/store/user/kmohrman/summaryTree_LHE/FullR2Studies/ULChecks/ttHJet_dim6TopMay20GST-StartPtChecks_UL17-GEN/v1/'
-    dir_list = [
-        ("output_ttHJet_testDIM6EQ1dim6TopMay20GSTStartPtChecks_run0", "ttHJet_DIM6Eq1_check_origttHStartPt"),
-        ("output_ttHJet_testDIM6SQdim6TopMay20GSTStartPtChecks_run0", "ttHJet_DIM6SQ_check_origttHStartPt"),
-    ]
+    #dir_loc = '/hadoop/store/user/kmohrman/summaryTree_LHE/FullR2Studies/ULChecks/ttHJet_dim6TopMay20GST-StartPtChecks_UL17-GEN/v1/'
+    #dir_list = [
+    #    ("output_ttHJet_testDIM6EQ1dim6TopMay20GSTStartPtChecks_run0", "ttHJet_DIM6Eq1_check_origttHStartPt"),
+    #    ("output_ttHJet_testDIM6SQdim6TopMay20GSTStartPtChecks_run0", "ttHJet_DIM6SQ_check_origttHStartPt"),
+    #]
+
+    ### UL 17 check all22 WCs ##
+    #dir_loc = '/hadoop/store/user/kmohrman/summaryTree_LHE/FullR2Studies/ValidationChecks/ttHJet-ttlnuJet-tllq-tHq_dim6TopMay20GST_all22WCsBaselineStartPtTOP19001_UL17-GEN/v1/'
+    #dir_list = [
+    #    ("output_ttHJet_all22WCsBaselineStartPtTOP19001dim6TopMay20GST_run0",   "ttHJet_all22WCs"),
+    #    ("output_ttlnuJet_all22WCsBaselineStartPtTOP19001dim6TopMay20GST_run0", "ttlnuJet_all22WCs"),
+    #]
 
 
     ##################################
@@ -204,7 +228,8 @@ def main():
         #output_dir = '/afs/crc.nd.edu/user/k/kmohrman/www/EFT/DJRplots/WCtests/ctGscan/xqcut10qCut19'
         #output_dir = '/afs/crc.nd.edu/user/k/kmohrman/www/EFT/DJRplots/testing/FP_dir_test/{outf}WCvalsAN_noctGscan_djr'.format(outf=outf)
         #output_dir = '/afs/crc.nd.edu/user/k/kmohrman/www/EFT/DJRplots/ModelFileTests/dim6top_LO_UFO_HanV4_2/noCuts/{outf}ctGScan250'.format(outf=outf)
-        #output_dir = '/afs/crc.nd.edu/user/k/kmohrman/www/EFT/DJRplots/forPhenoFinalDraft/ttH_xqcut_scan/{outf}'.format(outf=outf)
+        #output_dir = '/afs/crc.nd.edu/user/k/kmohrman/www/EFT/DJRplots/FullR2Studies/all22WCs_firstStartPtCheck_top19001pts/{outf}'.format(outf=outf)
+        output_dir = '/afs/crc.nd.edu/user/k/kmohrman/www/EFT/DJRplots/forPhenoFinalDraft/forPhenoJhepReview/ttZJet_qCutDoubleCheck/{outf}'.format(outf=outf)
 
         if output_dir == '':
             timestamp_tag = datetime.datetime.now().strftime('%Y%m%d_%H%M')
