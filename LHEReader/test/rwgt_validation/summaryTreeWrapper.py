@@ -1,339 +1,16 @@
-# Wrapper to 'readOutputTree.C', which specifies the root files to run over
-# This code reads output tress produced by EFTLHEReader.cc and groups them by process+coeff, then
-#   processes them in 'readOutputTree.C'
+# Wrapper to runGridpackValidation.C
+# This code reads output tress produced by EFTLHEReader.cc and groups them by process+coeff, then processes them in runGridpackValidation.C
 
 import subprocess
 import os
 from utils import regex_match, getInfoByTag, getDirectories, groupByProcess, groupByCoefficient
 
-#['ttH']
-#['ctWctZctpcpQMAxisScan','cpQ3cptcptbcbWctGAxisScan','cptbcbWctGAxisScan']
-
 ALL_INFO = [
-    {# Validation set of events for samples with +1 parton using Han's model
-        'tag': '2019_04_19/ValidationHanModelPlusJet',
-        'grp_name': 'plus1Jet',
-        'version': 'v1',
-        'include': False,
-        'p_wl': [],
-        'c_wl': [],
-        'r_wl': [],
-    },
-    {# Validation set of events for samples with +1 parton using Han's model
-        'tag': '2019_04_19/ValidationHanModelPlusJet-mAOD',
-        'grp_name': 'matched-1Jet',
-        'version': 'v1',
-        'include': False,
-        'p_wl': ['ttHJet'],
-        'c_wl': ['HanModel16DttllScanpoints'],
-        'r_wl': [],
-    },
-    {# Validation set of events for samples with +1 parton using Han's model (xqcut/qCut tests)
-        'tag': '2019_04_19/ttHJet-xqcutStudies-mAOD',
-        'grp_name': 'v2-qcut30',
-        'version': 'v2',
-        'include': False,
-        'p_wl': [],
-        'c_wl': [],
-        'r_wl': [],
-    },
-    {# Validation set of events for samples with +1 parton using Han's model (xqcut/qCut tests)
-        'tag': '2019_04_19/ttHJet-xqcutStudies-mAOD',
-        'grp_name': 'v3-qcut45',
-        'version': 'v3',
-        'include': False,
-        'p_wl': [],
-        'c_wl': [],
-        'r_wl': [],
-    },
-    {# Validation set of events for samples with +1 parton using Han's model (xqcut/qCut tests)
-        'tag': '2019_04_19/ttHJet-xqcutStudies-mAOD',
-        'grp_name': 'v4-qcut19',
-        'version': 'v4',
-        'include': False,
-        'p_wl': [],
-        'c_wl': [],
-        'r_wl': [],
-    },
-    {# Validation set of events for samples with +1 parton using Han's model (xqcut/qCut tests)
-        'tag': '2019_04_19/ttHJet-xqcutStudies-mAOD',
-        'grp_name': 'v5-qcut30',
-        'version': 'v5',
-        'include': False,
-        'p_wl': [],
-        'c_wl': [],
-        'r_wl': [],
-    },
-    {# Validation set of events for samples with +1 parton using Han's model (xqcut/qCut tests)
-        'tag': '2019_04_19/ttHJet-xqcutStudies-mAOD',
-        'grp_name': 'v6-qcut45',
-        'version': 'v6',
-        'include': False,
-        'p_wl': [],
-        'c_wl': [],
-        'r_wl': [],
-    },
-    {# Validation set of events for samples with +1 parton using Han's model (xqcut/qCut tests)
-        'tag': 'ttHJet-xqcutStudies-mAOD',
-        'grp_name': '',
-        'version': 'vTotal',
-        #'include': True,
-        'include': False,
-        'p_wl': [],
-        #'c_wl': [],
-        'c_wl': ["HanModelxqcut10qCut30","HanModelxqcut10qCut19"],
-        'r_wl': [],
-    },
-    {# Validation set of events for samples with +1 parton using Han's model (xqcut/qCut tests)
-        'tag': 'ttHJet-xqcutStudies-qCutScan-GEN',
-        'grp_name': '',
-        'version': 'v1',
-        #'include': True,
-        'include': False,
-        'p_wl': [],
-        #'c_wl': [
-        #    "HanModelxqcut05qCut10",
-        #    "HanModelxqcut05qCut19",
-        #    "HanModelxqcut05qCut25",
-        #    "HanModelxqcut05qCut40",
-        #    "HanModelxqcut05qCut60",
-        #    "HanModelxqcut10qCut19",
-        # ],
-        'c_wl': [],
-        'r_wl': [],
-    },
-    {# Validation set of events for samples with +1 parton using Han's model (xqcut/qCut tests): Scanpoints file
-        'tag': 'ttHJet-xqcutStudies-xqcut10qCutTests-GEN',
-        'grp_name': '',
-        'version': 'v2',
-        #'include': True,
-        'include': False,
-        'p_wl': [],
-        'c_wl': [
-            "HanModel16DttllScanpointsqCut15",
-            "HanModel16DttllScanpointsqCut19",
-            "HanModel16DttllScanpointsqCut25",
-         ],
-        #'c_wl': [],
-        'r_wl': [],
-    },
-    {# Validation set of events for samples with +1 parton using Han's model (xqcut/qCut tests): Scanpoints file (no ctG)
-        'tag': 'ttHJet-HanModelNoctG16DttllScanpoints-GEN',
-        'grp_name': '',
-        'version': 'v1',
-        #'include': True,
-        'include': False,
-        'p_wl': [],
-        'c_wl': [],
-        'r_wl': [],
-    },
-    {# TEST with different base paths
-        'basepath': '/hadoop/store/user/kmohrman/summaryTree_LHE/2019_04_19/',
-        'tag': 'ttHJet-xqcutStudies-qCutScan-GEN',
-        'grp_name': '',
-        'version': 'v1',
-        #'include': True,
-        'include': False,
-        'p_wl': [],
-        'c_wl': ["HanModelxqcut10qCut19"],
-        'r_wl': [],
-    },
-    {# TEST with different base paths
-        'basepath': '/afs/crc.nd.edu/user/k/kmohrman/CMSSW_Releases/CMSSW_9_4_6/src/EFTGenReader/LHEReader/test/rwgt_validation/root_files_from_hadoop/',
-        'tag': 'ttHJet-xqcutStudies-mAOD',
-        'grp_name': '',
-        'version': 'vTotal',
-        #'include': True,
-        'include': False,
-        'p_wl': [],
-        'c_wl': ["HanModelxqcut10qCut19"],
-        'r_wl': [],
-    },
-    {# Validation set of events for samples with +1 parton using Han's model
-        'tag': 'reference_scans/HanModel_1jet/ttH-tllq4f-tHq4f-ttlnu-GEN',
-        'grp_name': 'Jet1DRef',
-        'version': 'v1',
-        'include': False,
-        'p_wl': [],
-        'c_wl': [],
-        'r_wl': [],
-    },
-    {# Validation set of events for samples with +1 parton using Han's model (xqcut/qCut tests): Scanpoints files xqcut tests
-        'tag': 'ttHJet-xqcutStudies-xqcutScan_analysisEtaCut-GEN',
-        'grp_name': '',
-        'version': 'v1',
-        #'include': True,
-        'include': False,
-        'p_wl': [],
-        'c_wl': ["HanModel16DttllScanpointsxqcut05qCut10",
-            "HanModel16DttllScanpointsxqcut05qCut25",
-            "HanModel16DttllScanpointsqCut25",
-            "HanModel16DttllScanpointsxqcut15qCut25",
-            "HanModel16DttllScanpointsxqcut20qCut25",
-        ],
-        'r_wl': [],
-    },
-    {# FP samples: 
-        'tag': 'allProcesses-mAOD',
-        'grp_name': '',
-        'version': 'v1',
-        #'include': True,
-        'include': False,
-        'p_wl': [],
-        'c_wl': [],
-        'r_wl': [],
-    },
-    {# Han model v2 xqcut 10 qcut 15,19,25
-        'tag': 'ttHJet-HanV2Model-xqcut10qCutTests_analysisEtaCut-GEN',
-        'grp_name': '',
-        'version': 'v1',
-        #'include': True,
-        'include': False,
-        'p_wl': [],
-        'c_wl': [],
-        'r_wl': [],
-    },
-    {## Han model v4 xqcut 10 qcut 15,19,25
-        'tag': 'ttXJet-HanV4Model-xqcut10qCutTests_analysisEtaCut-GEN',
-        'grp_name': '',
-        'version': 'v1',
-        #'include': True,
-        'include': False,
-        'p_wl': ["ttHJet"],
-        'c_wl': [],
-        'r_wl': [],
-    },
-    {# Han model v4 0jet vs 1jet comp ####### (Use this for 0j vs 1j tests for all but ttZ)! #######
-        'tag': 'ttX-ttXJet-HanV4Model-0Jetvs1JetTests_analysisEtaCut-GEN',
-        'grp_name': '',
-        'version': 'v1',
-        #'include': True,
-        'include': False,
-        #'p_wl': ["ttH","ttHJet","ttlnuJet","ttlnu","ttllNuNuNoHiggs"],
-        'p_wl': ["ttllNuNuNoHiggs"],
-        'c_wl': [],
-        'r_wl': [],
-    },
-    {# Han model v4 0jet vs 1jet comp ####### Has ttZJet runs 1,2,3  #######
-        'tag': 'ttX-ttXJet_HanV4_0Jetvs1JetTests_with-ttZjetRun2Run3_analysisEtaCut-GEN',
-        'grp_name': '',
-        'version': 'v1',
-        #'include': True,
-        'include': False,
-        #'p_wl': ["ttH","ttHJet","ttlnuJet","ttlnu","ttllNuNuJetNoHiggs","ttllNuNuNoHiggs"],
-        'p_wl': ["ttH","ttHJet"],
-        #'p_wl': ["ttlnu","ttlnuJet","ttllNuNuNoHiggs","ttllNuNuJetNoHiggs"],
-        #'p_wl': ["ttH","ttHJet","ttllNuNuJetNoHiggs","ttllNuNuNoHiggs"],
-        #'p_wl': ['ttllNuNuJetNoHiggs','ttllNuNuNoHiggs'],
-        'c_wl': [],
-        'r_wl': [],
-    },
-    {# Han model v4 vs han origional model comp
-        'tag': 'ttXJet_R5B1-HanV4Model-Comp_analysisEtaCut-mAOD',
-        'grp_name': '',
-        'version': 'v1',
-        #'include': True,
-        'include': False,
-        'p_wl': ["ttlnuJet","ttHJet","ttllNuNuJetNoHiggs"],
-        'c_wl': ["HanModel16DttllScanpoints"],
-        'r_wl': [],
-    },
-    {# ttH and ttW: Han model v4 vs Han model v2 (w/o missing 5 verts added in) vs han origional model comp
-        'tag': 'ttHJet-ttWJet_R5B1-HanV4Model-Comp_analysisEtaCut-mAOD',
-        'grp_name': '',
-        'version': 'v1',
-        #'include': True,
-        'include': False,
-        'p_wl': [],
-        'c_wl': [],
-        'r_wl': [],
-    },
-    {# ttZ (and also ttH, ttW): Han model v4 vs Han model v2 (w/o missing 5 verts added in) vs han origional model comp
-        'tag': 'ttXJet_R5B1-HanV2ModelNOttggh-HanV4Model-Comp_analysisEtaCut-mAOD',
-        'grp_name': '',
-        'version': 'v1',
-        #'include': True,
-        'include': False,
-        'p_wl': ["ttllNuNuJetNoHiggs"],
-        'c_wl': [],
-        'r_wl': [],
-    },
-    {# HanModel (original) 0jet vs 1jet (FP) comp
-        'tag': 'ttX-ttXJet_R5B1-HanModel-0Jetvs1JetTests_analysisEtaCut-mAOD',
-        'grp_name': '',
-        'version': 'v1',
-        #'include': True,
-        'include': False,
-        'p_wl': [],
-        'c_wl': [],
-        'r_wl': [],
-    },
-    {# HanModelV4 starting points comp for ttHJet (runs 0,2) and ttWJet (all runs)
-        'tag': 'ttHJet-ttWJet_HanV4ttXJetStartPtChecks-xqcut10qCut19_analysisEtaCut-GEN',
-        'grp_name': '',
-        'version': 'v1',
-        #'include': True,
-        'include': False,
-        'p_wl': [],
-        'c_wl': [],
-        'r_wl': [],
-    },
-    {# HanModelV4 starting points comp for ttHJet (all runs) and ttZJet (runs 2 and 3)
-        'tag': 'ttHJet-ttZJet_HanV4ttXJetStartPtChecks-xqcut10qCut19_analysisEtaCut-GEN',
-        'grp_name': '',
-        'version': 'v1',
-        #'include': True,
-        'include': False,
-        'p_wl': ["ttllNuNuJetNoHiggs"],
-        'c_wl': [],
-        'r_wl': ["run2"],
-    },
-    {# HanModelV4 R6B1 starting point ttXJet qCut tests
-        'tag': 'ttXJet_HanV4ttXJetStartPtChecks-xqcut10qCutTests_analysisEtaCut-GEN',
-        'grp_name': '',
-        'version': 'v2',
-        #'include': True,
-        'include': False,
-        'p_wl': ["ttHJet"], ##### Use this version of tthJet for the comparison to dedicated gridpacks #####
-        'c_wl': ["HanV4ttXJetStartPtChecksqCut19"],
-        'r_wl': [],
-    },
-    {# HanModelV4 starting point chekcs for tHq 100k events samples
-        'tag': 'tHq4f_HanV4tHqStartPtChecks-allRunsMatchOff_analysisEtaCut-GEN',
-        'grp_name': '',
-        'version': 'v1',
-        #'include': True,
-        'include': False,
-        'p_wl': [],
-        'c_wl': [],
-        'r_wl': [],
-    },
-    {# HanModelV4 starting point chekcs for tZq 100k events samples
-        'tag': 'tllq4fNoSchanWNoHiggs0p_HanV4tZqStartPtChecks-allRunsMatchOff_analysisEtaCut-GEN',
-        'grp_name': '',
-        'version': 'v1',
-        #'include': True,
-        'include': False,
-        'p_wl': [],
-        'c_wl': [],
-        'r_wl': ["run0"],
-    },
 
-    #### Round 6 FP samples ####
-    {# HanModelV4 Round 6, (batch depends on HADOOP_BASE_PATH) FP samples:
-        #'tag': 'ttXjet-mAOD', # Batch1 (ttZ, ttW)
-        #'tag': 'tHq4f-mAOD', # Batch3 (tHq)
-        'tag': 'tZq4f-mAOD', # Batch4 (tZq)
-        #'tag': 'ttHjet-mAOD', # Batch7 (ttH good start pt)
-        'grp_name': '',
-        'version': 'v1',
-        ##'include': True,
-        'include': False,
-        #'p_wl': ["ttllNuNuJetNoHiggs","ttlnuJet"], # ttH from batch 1 had the bad start pt
-        'p_wl': [],
-        'c_wl': [],
-        'r_wl': [],
-    },
+    ######################################
+    #### TOP19-001 Round 6 FP samples ####
+    ######################################
+
     {# HanModelV4 FP R6 B2: ttWJet and ttZJet (and ttH but bad starting point for MC stats)
         'tag': 'ttXjet-mAOD',
         'grp_name': '',
@@ -378,9 +55,13 @@ ALL_INFO = [
         'r_wl': [],
         'basepath' : "/hadoop/store/user/kmohrman/summaryTree_LHE/FP/Round6/Batch7/",
     },
+
     ############################
 
+    ### Various TOP-19-001 and pheno paper studies ###
+
     {# HanModelV4 ttHJet dedicated ctG=[-3,3] axis scan ####### AXIS SCAN #######
+        # Apparently I did not specify basepath when I added this... would probably need to go searching for the tag name if we wanted to use it
         'tag': 'ttHJet_HanV4ctGAxisScan_analysisEtaCut-GEN',
         'grp_name': '',
         'version': 'v1',
@@ -403,6 +84,7 @@ ALL_INFO = [
         'basepath' : "/hadoop/store/user/kmohrman/summaryTree_LHE/2020_03_03_addPSweights/",
     },
     {# HanModelV4 ttHJet xqcut and qcut scan (12 samples in all)
+        # Apparently I did not specify basepath when I added this... would probably need to go searching for the tag name if we wanted to use it
         'tag': 'ttHJet_HanV4xqcutTests_analysisEtaCut-GEN',
         'grp_name': '',
         'version': 'v1',
@@ -527,6 +209,9 @@ ALL_INFO = [
         'r_wl': [],
         'basepath' : "/hadoop/store/user/kmohrman/summaryTree_LHE/2020_03_03_addPSweights",
     },
+    ############################
+
+    ### The final samples for the pheno paper ###
     {# HanV4 ttX (ttH, ttW, ttZ) ttXJet, all with and without QED1QCD3 constrints
         # Note: 300k events, and the ttV samples are at better starting points than the original, so the stats should be better
         # FOR PHENO PAPER 300k events
@@ -552,6 +237,7 @@ ALL_INFO = [
         'r_wl': [],
         'basepath' : "/hadoop/store/user/kmohrman/summaryTree_LHE/2020_03_03_addPSweights",
     },
+
     {# ttH start point check, just to make sure the "normal" start point is okay for ttH 0j (can't believe we havn't checked this before?)
         'tag': 'ttH_HanV4ttH0pStartPtDoubleCheck-GEN',
         'grp_name': '',
@@ -567,6 +253,8 @@ ALL_INFO = [
     #####################################################
     # New test samples made for the full run 2 analysis #
     #####################################################
+
+    ### Samples for preliminary validation studies (for model and framework) ###
 
     {# ttHJet, with new (May 2020) dim6Top model, but still using old (pre updated) genproductions scripts. Wiht gs norm T and F
         # Note: Something seems to have gone wrong wiht these gridpacks (at least the gs True one), as it seems the integrate step ran very fast, and two of the 1d curves are flata. Possibly it ran into issues and skipped something.
@@ -647,7 +335,7 @@ ALL_INFO = [
         'r_wl': [],
         'basepath' : "/hadoop/store/user/kmohrman/summaryTree_LHE/FullR2Studies/PreliminaryStudies/",
     },
-    ### 1d samples ###
+    # 1d samples
     {# ttHJet, 1d scans for cptb (since we saw a discrepency) and cpt (for reference)
         'tag': 'ttHJet_testGenprodVersions-dim6TopMat20GST-1dScans-cpt-cptb-GEN',
         'grp_name': '',
@@ -660,7 +348,7 @@ ALL_INFO = [
         'basepath' : "/hadoop/store/user/kmohrman/summaryTree_LHE/FullR2Studies/PreliminaryStudies/",
     },
 
-    ### UL samples (summary tree step made with 10_6_8) ###
+    ### UL samples for testing UL configs (summary tree step made with 10_6_8) ###
 
     { # Test UL 16 samples, all 5 processes
         'tag': 'ttXJet-tXq_GEN_ULCheckUL16-GEN',
@@ -709,7 +397,8 @@ ALL_INFO = [
         'basepath' : "/hadoop/store/user/kmohrman/summaryTree_LHE/FullR2Studies/ULChecks/",
     },
 
-    # Checking dim6 syntaxes
+    ### Checking dim6 syntaxes (for the studies for the double insertion studies) ###
+
     { # (UL17) Checking the dim6^2 syntax for ttHJet
         'tag': 'ttHJet_dim6TopMay20GST-checkDIM6Syntaxes_UL17-GEN',
         'grp_name': '',
@@ -768,7 +457,8 @@ ALL_INFO = [
         'basepath' : "/hadoop/store/user/kmohrman/summaryTree_LHE/FullR2Studies/ULChecks/",
     },
 
-    # Checking H and ll interference
+    ### Checking H and ll interference ###
+
     { # (UL17) Checking samples with H produced seperately to see if we are missing interferecne
         'tag': 'ttX-tXq_dim6TopMay20GST_testHiggsInterferenceWithLL_GEN_UL17-GEN',
         'grp_name': '',
@@ -827,7 +517,7 @@ ALL_INFO = [
 
     ### Full Run2 Validation Checks ###
 
-    { # (UL17) ttHJet, ttlnuJet, tllq, tHq (no ttllJet since it took too long...)
+    { # (UL17) 22d ttHJet, ttlnuJet, tllq, tHq (no ttllJet since it took too long...)
         'tag': 'ttHJet-ttlnuJet-tllq-tHq_dim6TopMay20GST_all22WCsBaselineStartPtTOP19001_UL17-GEN',
         'grp_name': '',
         'version': 'v1',
@@ -838,7 +528,7 @@ ALL_INFO = [
         'r_wl': [],
         'basepath' : "/hadoop/store/user/kmohrman/summaryTree_LHE/FullR2Studies/ValidationChecks/",
     },
-    { # (UL17) ttllJet and ttbarjet followup on the sample above
+    { # (UL17) 22d ttllJet and ttbarjet followup on the sample above
         'tag': 'ttllJet-ttbarJet_dim6TopMay20GST_all22WCsBaselineStartPtTOP19001_GEN_UL17-GEN',
         'grp_name': '',
         'version': 'v1',
@@ -850,7 +540,9 @@ ALL_INFO = [
         'basepath' : "/hadoop/store/user/kmohrman/summaryTree_LHE/FullR2Studies/ValidationChecks/",
     },
 
+    ######################################
     ### Pheno paper JHEP review checks ###
+    ######################################
 
     { # (UL17) ttW, ttWJet: Checking 1d cbW and cptb
         'tag': 'ttW-ttWJet_cbW-cptb-1dChecks_dim6TopMay20GST_GEN_UL17-GEN',
@@ -891,28 +583,6 @@ ALL_INFO = [
 
 # These are the tags to get the runs which should be used as reference points in the plotting
 REF_TAGS = [
-    #'ttbar1DAxisScans',
-    #'AllProcessAllCoeffsAxisScans',
-    #'HighResNoDim6Decays',
-    #'ttHRefCheck',
-    #'ttllRefCheck',
-    #'ttlnuRefCheck',
-    #'tllqRefCheck',
-    #'ttbarRefCheck',
-    #'tllqCloserLook',
-    #'FullReference',
-    #'tHqRefScans',
-    #'tHlnuRefScans',
-    #'ttbarRefAll4Quark',
-    #'ttHRefAll4Quark',
-    #'ttlnuRefAll4Quark',
-    #'ttllRefAll4Quark',
-    #'tllqRefAll4Quark',
-    #'tHqAndtHlnuRefAll4Quark',
-    #'AlexanderDecayChainCheck'
-    #'HighResNoDim6Decays'
-    #'ttH-tllq4f-tHq4f-ttlnu-GEN'
-
     # Axis scans (don't need to include as "True" in ALL_INFO)
     #'ttHJet_HanV4ctGAxisScan_analysisEtaCut-GEN'
     #'ttHJet_HanV4_cbW-AxisScan-withRwgt_smeftComp_QED1_QCD2_DIM62-GEN' # Note, the proc name is ttHJetSMEFTcomp, might need to take care of this in REF_PROCESS_MAP
@@ -930,26 +600,15 @@ REF_PROCESS_MAP = {
     #'ttllNuNuJetNoHiggs': 'ttll'
 }
 
-#HADOOP_PATH = "/hadoop/store/user/awightma/summaryTree_LHE/%s/%s/" % (grp_tag,version)
-#HADOOP_BASE_PATH = "/hadoop/store/user/awightma/summaryTree_LHE/"
-#HADOOP_BASE_PATH = "/hadoop/store/user/kmohrman/summaryTree_LHE/"
-
-#HADOOP_BASE_PATH = "/afs/crc.nd.edu/user/k/kmohrman/CMSSW_Releases/CMSSW_9_4_6/src/EFTGenReader/LHEReader/test/rwgt_validation/root_files_from_hadoop/"
+# These are not really used anymore
 #HADOOP_BASE_PATH = "/hadoop/store/user/kmohrman/summaryTree_LHE/2019_04_19/"
-HADOOP_BASE_PATH = "/hadoop/store/user/kmohrman/summaryTree_LHE/2019_08_14_addPtBranches/" ###
+HADOOP_BASE_PATH = "/hadoop/store/user/kmohrman/summaryTree_LHE/2019_08_14_addPtBranches/"
 #HADOOP_BASE_PATH = "/hadoop/store/user/kmohrman/summaryTree_LHE/2020_03_03_addPSweights/"
-
-#HADOOP_BASE_PATH = "/hadoop/store/user/kmohrman/summaryTree_LHE/FP/Round5/Batch1/"
-#HADOOP_BASE_PATH = "/hadoop/store/user/kmohrman/summaryTree_LHE/FP/Round6/Batch1/"
-#HADOOP_BASE_PATH = "/hadoop/store/user/kmohrman/summaryTree_LHE/FP/Round6/Batch3/"
-#HADOOP_BASE_PATH = "/hadoop/store/user/kmohrman/summaryTree_LHE/FP/Round6/Batch4/"
-#HADOOP_BASE_PATH = "/hadoop/store/user/kmohrman/summaryTree_LHE/FP/Round6/Batch7/"
 
 def runByProcess():
 
     cleanName = True
     #NOTE: The output name could be duplicated and overwrite a previous run
-    file_dirs = {}
     all_grouped_file_dirs_dict = {}
     spacing = 0
     for idx,info in enumerate(ALL_INFO):
@@ -991,16 +650,6 @@ def runByProcess():
 
     # Run root macro once per process
     count = 0
-    #for tup,fdirs in file_dirs.iteritems():
-    #    if len(tup) != 3:
-    #        print "[WARNING] Unknown file tuple,",tup
-    #        continue
-    #    process = tup[1]
-    #    grp_name = tup[2]
-    #    if len(grp_name) > 0:
-    #        output_name = process + "_" + grp_name
-    #    else:
-    #        output_name = process
     print "\nAll grouped dirs:" , all_grouped_file_dirs_dict
     for proc,fdirs in all_grouped_file_dirs_dict.iteritems():
         output_name = proc
@@ -1043,14 +692,8 @@ def runByProcess():
                 f.write(l)
 
         print ""
-        #print "[%d/%d] %s (dirs %d, ref %d):" % (count+1,len(file_dirs.keys()),output_name.ljust(spacing),len(fdirs),len(ref_dirs))
         print "[%d/%d] %s (dirs %d, ref %d):" % (count+1,len(all_grouped_file_dirs_dict.keys()),output_name.ljust(spacing),len(fdirs),len(ref_dirs))
-        #subprocess.check_call(['root','-b','-l','-q','readLHEOutputTree.C+(\"%s\",\"%s\",\"%s\")' % (output_name,dir_inputs,grp_name)])
-        #subprocess.check_call(['root','-b','-l','-q','rwgtDistributions.C+(\"%s_limit_fit\",\"%s\",\"%s\")' % (process,dir_inputs,"")])
-        #subprocess.check_call(['root','-b','-l','-q','runXsec.C+(\"%s\",\"%s\",\"%s\")' % (process,dir_inputs,grp_name)])
-        #subprocess.check_call(['root','-b','-l','-q','runGridpackValidation.C+(\"%s\",\"%s\",\"%s\",\"%s\")' % (output_name,dir_inputs,ref_inputs,grp_name)])
         subprocess.check_call(['root','-b','-l','-q','runGridpackValidation.C+(\"%s\",\"%s\",\"%s\")' % (output_name,dir_inputs,ref_inputs)])
-        #subprocess.check_call(['root','-b','-l','-q','run2DComparison.C+(\"%s\",\"%s\",\"%s\")' % (output_name,dir_inputs,grp_name)])
         count += 1
 
 def runByCoeff(tags,runs):
@@ -1076,9 +719,3 @@ def runByCoeff(tags,runs):
     return
 
 runByProcess()
-
-#tags = ["ctGRefV1AxisScan","cpQMRefV1AxisScan"]; runs = ["run5"]
-#runByCoeff(tags,runs)
-
-#tags = ["ctpRefV1AxisScan"]; runs = ["run2"]
-#runByCoeff(tags,runs)
