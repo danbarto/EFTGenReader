@@ -38,6 +38,7 @@
 const std::string kMGStart   = "MGStart";   // The tag we use to designate MadGraph starting point in the scanpoints file
 const std::string kOrig      = "original";
 const std::string kOutputDir = "read_lhe_outputs";
+const std::string kFitCoeffSaveDir = "fit_coeffs";
 
 /*
 struct customPointInfo {
@@ -60,6 +61,21 @@ void print_customPointInfo_object(std::vector<customPointInfo> points_info){
     }
 }
 */
+
+// Checks a string to see if it has UL16, UL16APV, UL17, or UL18 in it or returns an empty string
+TString findULYear(TString str){
+    TString r = "";
+    if (has_substr(str,"UL16") and not has_substr(str,"UL16APV")){
+        r = "UL16";
+    } else if (has_substr(str,"UL16APV")){
+        r = "UL16APV";
+    } else if (has_substr(str,"UL17")){
+        r = "UL17";
+    } else if (has_substr(str,"UL18")){
+        r = "UL18";
+    }
+    return r;
+}
 
 // Normalize a point (in the "customPointInfo" struct format) to a given value, propagate errors
 std::vector<customPointInfo> normCustomPoint(std::vector<customPointInfo> points_info, double norm_pt_val, double norm_pt_err){
@@ -106,6 +122,7 @@ void print_xsec(WCFit wcfit){
         {"ctp"   , 25.50},
         {"cpQM"  , -1.07},
         {"ctG"   , -0.85},
+        //{"ctG"   , 0.0},
         {"cbW"   , 3.17 },
         {"cpQ3"  , -1.81},
         {"cptb"  , 0.13 },
@@ -119,63 +136,108 @@ void print_xsec(WCFit wcfit){
         {"ctlTi" , -0.01}
     };
 
+    std::map<std::string,std::vector<float>> top19001_ttHJet_ttWJet_start_pts {
+        {"ctW"    , {  -8.30  ,  -3.82}},
+        {"ctp"    , {  64.33  ,  51.50}},
+        {"cpQM"   , {  45.88  ,  23.00}},
+        {"ctei"   , {  24.32  ,  8.938}},
+        {"ctli"   , {  24.43  ,  -7.00}},
+        {"cQei"   , {  23.75  ,  8.968}},
+        {"ctZ"    , {  -6.09  ,  5.727}},
+        {"cQlMi"  , {  23.95  ,  6.952}},
+        {"cQl3i"  , {  21.54  ,  9.243}},
+        {"ctG"    , {  -3.60  ,  2.430}},
+        {"ctlTi"  , {  21.80  ,  2.116}},
+        {"cbW"    , {  49.59  ,  -7.37}},
+        {"cpQ3"   , {  -51.1  ,  -14.4}},
+        {"cptb"   , {  136.1  ,  -21.8}},
+        {"cpt"    , {  -43.5  ,  -20.3}},
+        {"ctlSi"  , {  -20.0  ,  -9.99}},
+    };
+
+    std::map<std::string,std::vector<float>> top19001_dict {
+        {"ctW"   , {-3.08, 2.87}},
+        {"ctZ"   , {-3.32, 3.15}},
+        {"ctp"   , {-16.98, 44.26}},
+        {"cpQM"  , {-7.59, 21.65}},
+        {"ctG"   , {-1.38, 1.18}},
+        //{"ctG"   , {-1.38, 0.0}},
+        {"cbW"   , {-4.95, 4.95}},
+        {"cpQ3"  , {-7.37, 3.48}},
+        {"cptb"  , {-12.72, 12.63}},
+        {"cpt"   , {-18.62, 12.31}},
+        {"cQl3i" , {-9.67, 8.97}},
+        {"cQlMi" , {-4.02, 4.99}},
+        {"cQei"  , {-4.38, 4.59}},
+        {"ctli"  , {-4.29, 4.82}},
+        {"ctei"  , {-4.24, 4.86}},
+        {"ctlSi" , {-6.52, 6.52}},
+        {"ctlTi" , {-0.84, 0.84}},
+    };
+
     WCPoint bestfit_wcpt;
+    WCPoint allWCs1_wcpt;
+    WCPoint top19001lo_wcpt;
+    WCPoint top19001hi_wcpt;
+    WCPoint top19001ttH_wcpt;
+    WCPoint top19001ttW_wcpt;
     WCPoint sm_pt("smpt");
     WCPoint ctG2_wcpt;
     ctG2_wcpt.setStrength("ctG",2);
 
-    ////////////////////
-    /*
-    // For Comp with 1601
-    WCPoint comp_1601_pt;
-    double ctW_val = -1.5;
-    double ctZ_val = ctW_val*0.8768010;
-    std::cout << "The ctZ and ctW values: " << ctW_val << " , " << ctZ_val << std::endl;
-    comp_1601_pt.setStrength("ctW",ctW_val);
-    std::cout << "At ctW_val " << ctW_val << " : " << wcfit.evalPoint(&comp_1601_pt) << " +- " << wcfit.evalPointError(&comp_1601_pt) << std::endl;
-    comp_1601_pt.setStrength("ctZ",ctZ_val);
-    std::cout << "At the 1601 comp point: " << wcfit.evalPoint(&comp_1601_pt) << " +- " << wcfit.evalPointError(&comp_1601_pt) << std::endl;
-    std:: cout << " " << std::endl;
-
-    WCPoint comp_1601_pt2;
-    double ctW_val2 = -3;
-    double ctZ_val2 = ctW_val2*0.8768010;
-    std::cout << "The ctZ and ctW values: " << ctW_val2 << " , " << ctZ_val2 << std::endl;
-    comp_1601_pt2.setStrength("ctW",ctW_val2);
-    std::cout << "At ctW_val2 " << ctW_val2 << " : " << wcfit.evalPoint(&comp_1601_pt2) << " +- " << wcfit.evalPointError(&comp_1601_pt2) << std::endl;
-    comp_1601_pt2.setStrength("ctZ",ctZ_val2);
-    std::cout << "At the 1601 comp point: " << wcfit.evalPoint(&comp_1601_pt2) << " +- " << wcfit.evalPointError(&comp_1601_pt2) << std::endl;
-    std:: cout << " " << std::endl;
-
-    WCPoint comp_1601_pt3;
-    double ctW_val3 = 3;
-    double ctZ_val3 = ctW_val3*0.8768010;
-    std::cout << "The ctZ and ctW values: " << ctW_val3 << " , " << ctZ_val3 << std::endl;
-    comp_1601_pt3.setStrength("ctW",ctW_val3);
-    std::cout << "At ctW_val3 " << ctW_val3 << " : " << wcfit.evalPoint(&comp_1601_pt3) << " +- " << wcfit.evalPointError(&comp_1601_pt3) << std::endl;
-    comp_1601_pt3.setStrength("ctZ",ctZ_val3);
-    std::cout << "At the 1601 comp point: " << wcfit.evalPoint(&comp_1601_pt3) << " +- " << wcfit.evalPointError(&comp_1601_pt3) << std::endl;
-    std:: cout << " " << std::endl;
-    */
-    ////////////////////
-
-    /*
+    ///*
     std::string wc;
     float wc_bestfit_val;
     float bestfit_val;
     float bestfit_val_err;
+    float allWCs1_val;
+    float allWCs1_val_err;
+    float top19001lo_val;
+    float top19001lo_val_err;
+    float top19001hi_val;
+    float top19001hi_val_err;
+    float top19001ttH_val;
+    float top19001ttH_err;
+    float top19001ttW_val;
+    float top19001ttW_err;
     for (auto it = bestfit_dict.begin(); it != bestfit_dict.end(); it++){
         wc = it->first;
         wc_bestfit_val = it->second; 
-        std::cout << wc << " " << wc_bestfit_val << std::endl;
+        //std::cout << wc << " " << wc_bestfit_val << std::endl;
         bestfit_wcpt.setStrength(wc,wc_bestfit_val);
+        allWCs1_wcpt.setStrength(wc,1.0);
+        top19001lo_wcpt.setStrength(wc,top19001_dict[wc].at(0));
+        top19001hi_wcpt.setStrength(wc,top19001_dict[wc].at(1));
+        top19001ttH_wcpt.setStrength(wc,top19001_ttHJet_ttWJet_start_pts[wc].at(0));
+        top19001ttW_wcpt.setStrength(wc,top19001_ttHJet_ttWJet_start_pts[wc].at(1));
+        //std::cout << wc << " " << top19001_ttHJet_ttWJet_start_pts[wc].at(0) << std::endl;
+        //std::cout << wc << " " << top19001_ttHJet_ttWJet_start_pts[wc].at(1) << std::endl;
     }
     bestfit_val = wcfit.evalPoint(&bestfit_wcpt);
     bestfit_val_err = wcfit.evalPointError(&bestfit_wcpt);
-    std::cout << "Best fit val is: " << bestfit_val << " +- " << bestfit_val_err << std::endl;
-    std::cout << "SM val: " << wcfit.evalPoint(&sm_pt)<< " +- " << wcfit.evalPointError(&sm_pt)<<std::endl;
-    std::cout << "ctG=2: " << wcfit.evalPoint(&ctG2_wcpt) << " +- " << wcfit.evalPointError(&ctG2_wcpt)<<std::endl;
-    */
+    allWCs1_val = wcfit.evalPoint(&allWCs1_wcpt);
+    allWCs1_val_err = wcfit.evalPointError(&allWCs1_wcpt);
+    top19001lo_val = wcfit.evalPoint(&top19001lo_wcpt);
+    top19001lo_val_err = wcfit.evalPointError(&top19001lo_wcpt);
+    top19001hi_val = wcfit.evalPoint(&top19001hi_wcpt);
+    top19001hi_val_err = wcfit.evalPointError(&top19001hi_wcpt);
+    top19001ttH_val = wcfit.evalPoint(&top19001ttH_wcpt);
+    top19001ttH_err = wcfit.evalPointError(&top19001ttH_wcpt);
+    top19001ttW_val = wcfit.evalPoint(&top19001ttW_wcpt);
+    top19001ttW_err = wcfit.evalPointError(&top19001ttW_wcpt);
+    std::cout << "Best fit val:  " << bestfit_val << " +- " << bestfit_val_err << std::endl;
+    std::cout << "All WCs 1 val: " << allWCs1_val << " +- " << allWCs1_val_err << std::endl;
+    std::cout << "TOP19001 hi:   " << top19001hi_val << " +- " << top19001hi_val_err << std::endl;
+    std::cout << "TOP19001 lo:   " << top19001lo_val << " +- " << top19001lo_val_err << std::endl;
+    std::cout << "TOP19001 ttH:  " << top19001ttH_val << " +- " << top19001ttH_err << std::endl;
+    std::cout << "TOP19001 ttW:  " << top19001ttW_val << " +- " << top19001ttW_err << std::endl;
+    std::cout << "ctG=2:         " << wcfit.evalPoint(&ctG2_wcpt) << " +- " << wcfit.evalPointError(&ctG2_wcpt)<<std::endl;
+    std::cout << "SM val:        " << wcfit.evalPoint(&sm_pt)<< " +- " << wcfit.evalPointError(&sm_pt)<<std::endl;
+    top19001hi_wcpt.setStrength("ctG",0);
+    bestfit_wcpt.setStrength("ctG",0);
+    std::cout << "Setting ctG 0, 19001hi and otherpt: " << wcfit.evalPoint(&top19001hi_wcpt) << " " << wcfit.evalPoint(&bestfit_wcpt) << std::endl;
+    std::cout << "" << std::endl;
+    //*/
 
 }
 
@@ -341,6 +403,7 @@ void runit(TString output_name,TString input_rundirs_spec,TString ref_rundirs_sp
         if (!hasElement(all_dirs,fdir)) all_dirs.push_back(fdir);
     }
     ref_filenames.close();
+    int tot_events = 0;
     for (uint line_idx = 0; line_idx < all_dirs.size(); line_idx++) {
         fdir = all_dirs.at(line_idx);  // fdir will be a path to a hadoop directory with root files for a particluar run
         std::string run_dir = getRunDirectory(fdir.Data());
@@ -401,16 +464,18 @@ void runit(TString output_name,TString input_rundirs_spec,TString ref_rundirs_sp
         int chain_entries = chain.GetEntries();
         int last_entry = chain_entries;
         if (chain_entries > 100000) { // 100k takes about 10min
+        //if (chain_entries > 90000) { // 100k takes about 10min
             std::cout << "Chain_entries: " << chain_entries << std::endl;
             last_entry = 100000;
+            //last_entry = 90000;
         }
         //last_entry = 100000; // For testing
         last_entry = 10; // For testing
         std::cout << "Last_entry: " << last_entry << std::endl;
 
         // Test LS stuff
-        //int num_LS = 200;
-        int num_LS = 10; // Testing
+        int num_LS = 401;
+        //int num_LS = 11; // Testing
         std::set<int> unique_runs;
 
         int first_entry = 0;
@@ -467,6 +532,11 @@ void runit(TString output_name,TString input_rundirs_spec,TString ref_rundirs_sp
         std::string pt_str = ref_pts_dict[run_label];
         WCPoint ref_fit_pt = WCPoint(pt_str);
 
+        double start_pt_xsec=0;
+        double originalXWGTUP_intree_val=0; // Should be same for all events
+        double p_counts=0;
+        double n_counts=0;
+
         ofstream resids_file; // ResidTest
         resids_file.open("fit_resids_test_dir/test_resids_"+process+".txt"); // ResidTest
 
@@ -496,6 +566,7 @@ void runit(TString output_name,TString input_rundirs_spec,TString ref_rundirs_sp
             }
             */
 
+            /*
             //// ResidCheck ////
             //int counter = 0;
             for (auto it = eftwgts_intree->begin(); it != eftwgts_intree->end(); it++ ){
@@ -509,13 +580,22 @@ void runit(TString output_name,TString input_rundirs_spec,TString ref_rundirs_sp
                 resids_file << resid << " " ;
                 //counter = counter+1;
             }
+            */
 
             sw.start("Add Fit");
             inclusive_fit.addFit(*wcFit_intree);
             sw.lap("Add Fit");
             sw.lap("Event Loop");
 
+            // Check weights
             ref_fit_pt.wgt += originalXWGTUP_intree;
+            start_pt_xsec += originalXWGTUP_intree;
+            originalXWGTUP_intree_val = originalXWGTUP_intree;
+            if (originalXWGTUP_intree_val > 0) {
+                p_counts = p_counts + 1;
+            } else if (originalXWGTUP_intree_val < 0) {
+                n_counts = n_counts + 1;
+            }
 
             //if (genLep_pt3_intree > 10 and genJet_pt4_intree > 100){
             //if (genLep_pt3_intree > 10 and genJet_pt4_intree > 30){
@@ -525,10 +605,11 @@ void runit(TString output_name,TString input_rundirs_spec,TString ref_rundirs_sp
                 //std::cout << "Skip; pt: " << genLep_pt3_intree << " , " << genJet_pt4_intree << std::endl;
             //}
 
-
+            tot_events = tot_events +1;
         }
         sw.stop("Full Loop");
         resids_file.close(); // ResidsTest
+        std::cout << "Tot events ran over: " << tot_events;
 
         //std::cout << "\n Selected events over total: " << selection_events << "/" << last_entry << "->" << (float)selection_events/last_entry << "\n" << std::endl;
 
@@ -537,13 +618,14 @@ void runit(TString output_name,TString input_rundirs_spec,TString ref_rundirs_sp
 
         double SM_xsec_incl = inclusive_fit.evalPoint(&sm_pt);
         //double SM_xsec_sel = selection_fit.evalPoint(&sm_pt);
-        inclusive_fit.scale(1.0/SM_xsec_incl);
+        inclusive_fit.scale(1.0/SM_xsec_incl); // TODO TODO TODO !!! Put SM norm back in if commented out for LS stuff!!!
         /*
         // TMP LS stuff
         //inclusive_fit.scale(1.0/SM_xsec_incl); // TMP!!! do not norm to SM, LS stuff
         inclusive_fit.scale(1.0/unique_runs.size()); // TMP!! LS stuff
+        //inclusive_fit.scale(1.0/500.0); // TMP!! To account for avg instead of sum weight
         std::cout << "\n\nnormalizing to LS!!! " << unique_runs.size() << "\n\n" << std::endl;
-        selection_fit.scale(1.0/SM_xsec_sel);
+        //selection_fit.scale(1.0/SM_xsec_sel);
         */
 
         //std::cout << "\nAfter all norm!!! incl SM xsec: " << inclusive_fit.evalPoint(&sm_pt) << " selection SM xsec: " << selection_fit.evalPoint(&sm_pt) << std::endl;
@@ -559,7 +641,6 @@ void runit(TString output_name,TString input_rundirs_spec,TString ref_rundirs_sp
         }
         //*/
         
-
         // Normalize ref pt and add to list
         std::cout << "Is ref? " << is_ref << std::endl;
         if (is_ref) {
@@ -568,12 +649,27 @@ void runit(TString output_name,TString input_rundirs_spec,TString ref_rundirs_sp
             ref_pts.push_back(ref_fit_pt);
         }
 
+
         if (is_tar) {
 
             std::cout << "Group tag: " << grp_tag << std::endl;
+            std::cout << "FDIR: " << fdir << std::endl;
+            TString ul_str = findULYear(fdir);
             std::string leg_tag;
             TString process_TStr = process;
             TString tmp_tag = grp_tag;
+
+            // Print orig weight
+            std::cout << "\n" << grp_tag << run_label << std::endl;
+            std::cout << "Unique run size:           " << unique_runs.size() << std::endl;
+            std::cout << "Start pt wgt over SM:      " << originalXWGTUP_intree/SM_xsec_incl << std::endl;
+            std::cout << "Weight at SM:              " << SM_xsec_incl << std::endl;
+            std::cout << "Start pt wgt sum:          " << start_pt_xsec << std::endl;
+            std::cout << "Start pt wgt sum over LSs: " << start_pt_xsec/unique_runs.size() << std::endl;
+            std::cout << "Start pt wgt sum over SM:  " << start_pt_xsec/SM_xsec_incl << std::endl;
+            std::cout << "originalXWGTUP_intree_val: " << originalXWGTUP_intree_val << std::endl;
+            std::cout << "p, n, frac n:              " << p_counts << " , " << n_counts << " -> " << n_counts/(n_counts+p_counts) << std::endl;
+            std::cout << "\n" << std::endl;
 
             // This will set up the names in the legend
             //TString comp_type = "0p1pComp"; // ResultsSec
@@ -582,21 +678,24 @@ void runit(TString output_name,TString input_rundirs_spec,TString ref_rundirs_sp
             //TString comp_type = "matchScaleScan";
             //TString comp_type = "startPtComp";
             //TString comp_type = "ttWttZchecks"; // NLOCompSec
+            leg_tag = process_TStr;
 
+            /*
             // Get cleaned up version of process name
             if (process_TStr.Index("ttH") != -1){
-                //leg_tag = "tth";
-                leg_tag = "t#bar{t}h";
+                leg_tag = "tth";
+                //leg_tag = "t#bar{t}h";
             // Note, do we still want ttll and ttlnu to show up at ttW and ttZ? Should re evalueate next time we want to plot ttll an ttlnu
             } else if (process_TStr.Index("ttZ") != -1 or process_TStr.Index("ttll") != -1) { 
-                //leg_tag = "ttZ";
-                leg_tag = "t#bar{t}Z";
+                leg_tag = "ttZ";
+                //leg_tag = "t#bar{t}Z";
             } else if (process_TStr.Index("ttW") != -1 or process_TStr.Index("ttlnu") != -1) {
-                //leg_tag = "ttW";
-                leg_tag = "t#bar{t}W";
+                leg_tag = "ttW";
+                //leg_tag = "t#bar{t}W";
             } else {
                 std::cout << "Note: process " << process << " is not ttH, ttll, or ttlnu. Not cleaning up process name." << std::endl;
             }
+            */
             if (comp_type == "0p1pComp"){
                 if (tmp_tag.Index("NoJets") != -1 or process_TStr.Index("Jet") == -1) {
                     //leg_tag = leg_tag + " 0p ";
@@ -606,7 +705,7 @@ void runit(TString output_name,TString input_rundirs_spec,TString ref_rundirs_sp
                     leg_tag = leg_tag + "+j LO ";
                 }
             } else if (comp_type == "tag"){
-                leg_tag = leg_tag + grp_tag;
+                leg_tag = leg_tag + ul_str + grp_tag + run_label ;
             } else if (comp_type == "qCutScan") {
                 leg_tag = leg_tag + " 0+1p: xqcut10, " + tmp_tag(tmp_tag.Index("qCut"), tmp_tag.Length());
             } else if (comp_type == "matchScaleScan") {
@@ -670,14 +769,18 @@ void runit(TString output_name,TString input_rundirs_spec,TString ref_rundirs_sp
         run_idx++;
     }
 
-    /*
+    ///*
     // TestPrint
-    print_xsec(target_fits.at(0));
+    //print_xsec(target_fits.at(0));
     std::cout << "\nThe size of the target fits: " << target_fits.size() << "\n" << std::endl;
     for (size_t i=0; i<target_fits.size(); i++){
         print_xsec(target_fits.at(i));
+        std::string savefit_fpath = kFitCoeffSaveDir + "/" + "all22WCs/fitparams_smNorm_" + target_fits.at(i).getTag() + ".txt";
+        //std::string savefit_fpath = kFitCoeffSaveDir + "/" + "H_int_studies/SamplesProcessedSeparate/fitparams_test_noNormScalby500_" + target_fits.at(i).getTag() + ".txt";
+        //make_fitparams_file(savefit_fpath,{target_fits.at(i)});
+        //target_fits.at(i).save(savefit_fpath);
     }
-    */
+    //*/
 
     bool print_stopwatch = 0;
     if (print_stopwatch) {    
@@ -688,6 +791,7 @@ void runit(TString output_name,TString input_rundirs_spec,TString ref_rundirs_sp
         sw.readAllTimers(use_avg,norm_name);
     }
 
+    //throw std::runtime_error("");
     // Dynamically figure out which WC are present across all WCFits
     std::vector<std::string> wc_names;
     if (wc_names.size() == 0) {
@@ -708,6 +812,7 @@ void runit(TString output_name,TString input_rundirs_spec,TString ref_rundirs_sp
 
     // Plot specific 1-D fits
     for (auto& wc_name: wc_names) {
+        std::cout << "WC NAME !!! " << wc_name << std::endl;
         arxiv_fit_comps_vect = {};
         std::vector<WCFit> subset_fits; // These are the fits we are actually going to plot
         std::vector<customPointInfo> points_to_plot_with_errorbars; // This is what we'll pass to the plotting script
@@ -747,6 +852,7 @@ void runit(TString output_name,TString input_rundirs_spec,TString ref_rundirs_sp
         }
         
         bool save_fits = false; // Don't save the fits for now
+        //bool save_fits = true; // Don't save the fits for now
         if (save_fits) {
             std::string fitparams_fpath = kOutputDir + "/" + "fitparams_" + curr_process + "_" + wc_name + ".txt";
             make_fitparams_file(fitparams_fpath,subset_fits);
