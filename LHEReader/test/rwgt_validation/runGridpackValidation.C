@@ -499,9 +499,7 @@ void runit(TString output_name,TString input_rundirs_spec,TString ref_rundirs_sp
         }
 
         WCFit inclusive_fit;
-        //WCFit selection_fit;
 
-        //int selection_events = 0;
         double genLep_pt1_intree;
         double genLep_pt2_intree;
         double genLep_pt3_intree;
@@ -597,27 +595,14 @@ void runit(TString output_name,TString input_rundirs_spec,TString ref_rundirs_sp
                 n_counts = n_counts + 1;
             }
 
-            //if (genLep_pt3_intree > 10 and genJet_pt4_intree > 100){
-            //if (genLep_pt3_intree > 10 and genJet_pt4_intree > 30){
-                //selection_events = selection_events + 1;
-                //selection_fit.addFit(*wcFit_intree);
-            //} else{
-                //std::cout << "Skip; pt: " << genLep_pt3_intree << " , " << genJet_pt4_intree << std::endl;
-            //}
-
             tot_events = tot_events +1;
         }
         sw.stop("Full Loop");
         resids_file.close(); // ResidsTest
         std::cout << "Tot events ran over: " << tot_events;
 
-        //std::cout << "\n Selected events over total: " << selection_events << "/" << last_entry << "->" << (float)selection_events/last_entry << "\n" << std::endl;
-
         // Normalize to SM
-        //std::cout << "\nBefore all norm!!! incl SM xsec: " << inclusive_fit.evalPoint(&sm_pt) << " selection SM xsec: " << selection_fit.evalPoint(&sm_pt) << std::endl;
-
         double SM_xsec_incl = inclusive_fit.evalPoint(&sm_pt);
-        //double SM_xsec_sel = selection_fit.evalPoint(&sm_pt);
         inclusive_fit.scale(1.0/SM_xsec_incl); // TODO TODO TODO !!! Put SM norm back in if commented out for LS stuff!!!
         /*
         // TMP LS stuff
@@ -625,10 +610,7 @@ void runit(TString output_name,TString input_rundirs_spec,TString ref_rundirs_sp
         inclusive_fit.scale(1.0/unique_runs.size()); // TMP!! LS stuff
         //inclusive_fit.scale(1.0/500.0); // TMP!! To account for avg instead of sum weight
         std::cout << "\n\nnormalizing to LS!!! " << unique_runs.size() << "\n\n" << std::endl;
-        //selection_fit.scale(1.0/SM_xsec_sel);
         */
-
-        //std::cout << "\nAfter all norm!!! incl SM xsec: " << inclusive_fit.evalPoint(&sm_pt) << " selection SM xsec: " << selection_fit.evalPoint(&sm_pt) << std::endl;
 
         ///* // Dump the fit functions
         //std::vector<std::string> list_of_WC = {"ctG","ctW"};
@@ -637,7 +619,6 @@ void runit(TString output_name,TString input_rundirs_spec,TString ref_rundirs_sp
         for (std::string WC : list_of_WC){ 
             //inclusive_fit.dump(false,153,WC);
             inclusive_fit.dump(false,276,WC);
-            //selection_fit.dump(false,153,WC);
             std::cout << " " << std:: endl;
         }
         //*/
@@ -741,8 +722,6 @@ void runit(TString output_name,TString input_rundirs_spec,TString ref_rundirs_sp
 
             inclusive_fit.setTag(leg_tag); // If passing inclusive fit!!!
             target_fits.push_back(inclusive_fit);
-            //selection_fit.setTag(leg_tag); // If passing selection fit!!!
-            //target_fits.push_back(selection_fit);
 
             /*
             // Make a custom WCFit that is made from points were cpQM is -cpQ3
