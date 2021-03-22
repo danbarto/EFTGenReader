@@ -46,7 +46,13 @@ std::unordered_map<std::string,std::string> WC_LABEL_MAP {
     {"ctli" , "#it{c}^{(#it{l})}_{tl}"},
     {"ctei" , "#it{c}^{(#it{l})}_{te}"},
     {"ctlSi", "#it{c}^{S(#it{l})}_{t}"},
-    {"ctlTi", "#it{c}^{T(#it{l})}_{t}"}
+    {"ctlTi", "#it{c}^{T(#it{l})}_{t}"},
+    {"cQq13", "#it{c}^{3,1}_{Qq}"},
+    {"cQq83", "#it{c}^{3,8}_{Qq}"},
+    {"cQq11", "#it{c}^{1,1}_{Qq}"},
+    {"ctq1" , "#it{c}^{1}_{tq}"},
+    {"cQq81", "#it{c}^{1,8}_{Qq}"},
+    {"ctq8" , "#it{c}^{8}_{tq}"},
 };
 
 // Returns true if s has substr in it
@@ -402,6 +408,7 @@ void make_1d_xsec_plot(
 
     /*
     // SPECIFIC TO PHENO RESULTS SECTION!!!
+    // TODO: Do we want plotting_NLO_comp_fits on?
     legend_centered = true;
     include_error_bands = false;
     //include_error_bands = true;
@@ -505,7 +512,13 @@ void make_1d_xsec_plot(
         {"cpQ3" , {-5.5, 5.8} },
         {"cpQM" , {-3.5, 3}   },
         {"cpt"  , {-13, 18}   },
-        {"ctp"  , {-60, 10}   }
+        {"ctp"  , {-60, 10}   },
+        {"cQq13", {-1.1, 1.3} },
+        {"cQq83", {-1.3, 1.6} },
+        {"cQq11", {-6.8, 7.4} },
+        {"ctq1" , {-5.3, 7.5} },
+        {"cQq81", {-4.7, 7.8} },
+        {"ctq8" , {-3.7, 4.1} },
     };
 
     std::map<string,std::pair<double,double>> asimov_lims_dict {
@@ -746,6 +759,7 @@ void make_1d_xsec_plot(
         // Auto color the lines
         if (color_auto){
             fit->SetLineColor(i+1);
+            fit->SetLineStyle(1); // Not sure if we'll always want this...
         }
 
         if (i == 0) {
@@ -794,7 +808,7 @@ void make_1d_xsec_plot(
             }
         }
         //if (not use_hardcode_ylims and tmp_max_nlo_pt*1.5 > fit->GetMaximum()){
-        if (not use_hardcode_ylims and tmp_max_nlo_pt*2.0 > fit->GetMaximum()){
+        if (not use_hardcode_ylims and plotting_NLO_comp_fits and tmp_max_nlo_pt*2.0 > fit->GetMaximum()){
             //fit->SetMaximum(tmp_max_nlo_pt*1.5);
             fit->SetMaximum(tmp_max_nlo_pt*2.0);
         }
