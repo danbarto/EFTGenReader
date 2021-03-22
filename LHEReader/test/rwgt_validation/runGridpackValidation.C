@@ -470,7 +470,7 @@ void runit(TString output_name,TString input_rundirs_spec,TString ref_rundirs_sp
             //last_entry = 90000;
         }
         //last_entry = 100000; // For testing
-        last_entry = 10; // For testing
+        last_entry = 100; // For testing
         std::cout << "Last_entry: " << last_entry << std::endl;
 
         // Test LS stuff
@@ -632,10 +632,11 @@ void runit(TString output_name,TString input_rundirs_spec,TString ref_rundirs_sp
 
         ///* // Dump the fit functions
         //std::vector<std::string> list_of_WC = {"ctG","ctW"};
-        std::vector<std::string> list_of_WC = {"ctp","cpQM","ctW","ctZ","ctG","cbW","cpQ3","cptb","cpt","cQl3i","cQlMi","cQei","ctli","ctei","ctlSi","ctlTi"};
+        std::vector<std::string> list_of_WC = {"ctp","cpQM","ctW","ctZ","ctG","cbW","cpQ3","cptb","cpt","cQl3i","cQlMi","cQei","ctli","ctei","ctlSi","ctlTi", "cQq13", "cQq83", "cQq11", "ctq1" , "cQq81", "ctq8" };
         std::cout << " " << std:: endl;
         for (std::string WC : list_of_WC){ 
-            inclusive_fit.dump(false,153,WC);
+            //inclusive_fit.dump(false,153,WC);
+            inclusive_fit.dump(false,276,WC);
             //selection_fit.dump(false,153,WC);
             std::cout << " " << std:: endl;
         }
@@ -775,10 +776,11 @@ void runit(TString output_name,TString input_rundirs_spec,TString ref_rundirs_sp
     std::cout << "\nThe size of the target fits: " << target_fits.size() << "\n" << std::endl;
     for (size_t i=0; i<target_fits.size(); i++){
         print_xsec(target_fits.at(i));
-        std::string savefit_fpath = kFitCoeffSaveDir + "/" + "all22WCs/fitparams_smNorm_" + target_fits.at(i).getTag() + ".txt";
+        std::string savefit_fpath = kFitCoeffSaveDir + "/" + "tmp/" + target_fits.at(i).getTag() + ".txt";
+        //std::string savefit_fpath = kFitCoeffSaveDir + "/" + "all22WCs/fitparams_smNorm_" + target_fits.at(i).getTag() + ".txt";
         //std::string savefit_fpath = kFitCoeffSaveDir + "/" + "H_int_studies/SamplesProcessedSeparate/fitparams_test_noNormScalby500_" + target_fits.at(i).getTag() + ".txt";
         //make_fitparams_file(savefit_fpath,{target_fits.at(i)});
-        //target_fits.at(i).save(savefit_fpath);
+        target_fits.at(i).save(savefit_fpath);
     }
     //*/
 
@@ -812,7 +814,6 @@ void runit(TString output_name,TString input_rundirs_spec,TString ref_rundirs_sp
 
     // Plot specific 1-D fits
     for (auto& wc_name: wc_names) {
-        std::cout << "WC NAME !!! " << wc_name << std::endl;
         arxiv_fit_comps_vect = {};
         std::vector<WCFit> subset_fits; // These are the fits we are actually going to plot
         std::vector<customPointInfo> points_to_plot_with_errorbars; // This is what we'll pass to the plotting script
