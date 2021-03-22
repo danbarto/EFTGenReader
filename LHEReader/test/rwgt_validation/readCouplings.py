@@ -1,6 +1,8 @@
 import matplotlib.pyplot as plt
 import collections
 import copy
+import numpy as np
+import json
 
 ### Info about this script ###
 #    - This script is very messy, but includes a lot of functions for parsing WCFits
@@ -206,6 +208,7 @@ sm_pt = {
     "ctlTi" : 0.0,
     "sm" : 1.,
 }
+WC_LST = [ "ctW" , "ctZ" , "ctp" , "cpQM" , "ctG" , "cbW" , "cpQ3" , "cptb" , "cpt" , "cQl3i" , "cQlMi" , "cQei" , "ctli" , "ctei" , "ctlSi" , "ctlTi" , "cQq13", "cQq83", "cQq11", "ctq1" , "cQq81", "ctq8" ]
 
 ### General helper functions ###
 
@@ -261,8 +264,40 @@ def scale_fit(f,scale):
         scale_fit[term] = f[term]*float(scale)
     return scale_fit
 
+# Takes a multi-dim fit, and returns just the 1d quadratic fit coeffs for one WC
+def get_1d_fit(fit_dict,wc):
+    s0 = fit_dict["sm*sm"]
+    s1 = fit_dict[wc+"*sm"]
+    s2 = fit_dict[wc+"*"+wc]
+    return [s0,s1,s2]
 
-### More complex helper functions ###
+# Evaluate a 1d quadratic at a given point
+def eval_1d_quad(quad_params,x):
+    if len(quad_params) != 3:
+        print "\nYou are using this function wrong. There should be three params in a quad fit. Exiting...\n"
+        raise Exception
+    y = float(quad_params[0]) + float(quad_params[1])*float(x) + float(quad_params[2])*float(x)*float(x)
+    return y
+
+# Takes as input 1d quadratic fit params, and returns the x value where y crosses some threshold
+def find_where_fit_crosses_threshold(quad_params,threshold):
+    threshold = float(threshold)
+    y = 0
+    x = 0
+    for x in np.linspace(0,100,10001):
+        y_p = eval_1d_quad(quad_params,x)
+        y_n = eval_1d_quad(quad_params,-x)
+        if y_p >= threshold:
+            y = y_p
+            break
+        if y_n >= threshold:
+            y = y_n
+            x = -x
+            break
+    return x,y
+
+
+### More complex helper functions, probably only useful in specific cases ###
 
 # Takes two fit dictionaries and returns a dictioinary with the percent difference between the values
 def get_fit_dicts_pdiff(d1,d2,threshold=None):
@@ -428,8 +463,42 @@ def eval_two_fits_and_print_pdiff(f1,f2,point):
     p = get_pdiff(x1,x2)
     print "\txsec1,xsec2+3:",x1,",",x2,"\t->",p
 
+# Takes a dictionary of fit dictionaires, loops through WCs, finds where 1d fits pass some threshold, dumps to json
+def find_start_pt_and_dump_to_JSON(fit_dicts,wc_lst,threshold,tag):
+    start_pts_dict = {}
+    for sample_name , fit_dict in fit_dicts.iteritems():
+        start_pts_dict[sample_name] = {}
+        for wc in wc_lst:
+            quad1d = get_1d_fit(fit_dict,wc)
+            start_pts_dict[sample_name][wc] = round(find_where_fit_crosses_threshold(quad1d,threshold)[0],2)
+    print "\n", tag, "\n" , start_pts_dict
+    with open(tag+".json","w") as outfile:
+        json.dump(start_pts_dict, outfile)
+
 
 ### Main functions ###
+
+# Find the place where the WCs scale each process by a certain amount, to be used as the start point
+def main_for_finding_start_pts():
+    file_names = {
+        "ttHJet"   : "fit_coeffs/all22WCs/fitparams_smNorm_ttHJetUL17all22WCsBaselineStartPtTOP19001dim6TopMay20GSTrun0.txt",
+        "ttlnuJet" : "fit_coeffs/all22WCs/fitparams_smNorm_ttlnuJetUL17all22WCsBaselineStartPtTOP19001dim6TopMay20GSTrun0.txt",
+        "ttllJet"  : "fit_coeffs/all22WCs/fitparams_smNorm_ttllNuNuJetNoHiggsUL17all22WCsBaselineStartPtTOP19001dim6TopMay20GSTrun0.txt",
+        "tllq"     : "fit_coeffs/all22WCs/fitparams_smNorm_tllq4fNoSchanWNoHiggs0pUL17all22WCsBaselineStartPtTOP19001dim6TopMay20GSTrun0.txt",
+        "tHq"      : "fit_coeffs/all22WCs/fitparams_smNorm_tHq4fUL17all22WCsBaselineStartPtTOP19001dim6TopMay20GSTrun0.txt",
+        "ttbarJet" : "fit_coeffs/all22WCs/fitparams_smNorm_ttbarJetUL17all22WCsBaselineStartPtTOP19001dim6TopMay20GSTrun0.txt",
+    }
+    all_fits = {}
+    for tag,fname in file_names.iteritems():
+        f_dict = read_fit_file_dump_dict(fname)
+        all_fits[tag] = f_dict
+
+    find_start_pt_and_dump_to_JSON(all_fits,WC_LST,5.0,"startpts_scale_by_5p0")
+    find_start_pt_and_dump_to_JSON(all_fits,WC_LST,2.0,"startpts_scale_by_2p0")
+    find_start_pt_and_dump_to_JSON(all_fits,WC_LST,1.5,"startpts_scale_by_1p5")
+    find_start_pt_and_dump_to_JSON(all_fits,WC_LST,1.3,"startpts_scale_by_1p3")
+    find_start_pt_and_dump_to_JSON(all_fits,WC_LST,1.1,"startpts_scale_by_1p1")
+
 
 # This was the main function for what this script was originally designed for (i.e. trying to understand differences between fits from dim6=1 and dim6^2=2 samples)
 def main():
@@ -517,103 +586,6 @@ def main_for_hll_int_checks():
         "tllq"    : "fit_coeffs/H_int_studies/fitparams_test_noNormScalby500_tllq4fNoSchanWUL17testHiggsInterferenceWithlldim6TopMay20GSTrun1.txt",
         "tllqNoH" : "fit_coeffs/H_int_studies/fitparams_test_noNormScalby500_tllq4fNoSchanWNoHiggs0pUL17testHiggsInterferenceWithlldim6TopMay20GSTrun1.txt",
         "tHtollq" : "fit_coeffs/H_int_studies/fitparams_test_noNormScalby500_tHTOllq4fNoSchanWUL17testHiggsInterferenceWithlldim6TopMay20GSTrun0.txt",
-        ### These are the testV2HiggsInterferenceWithlldim6TopMay20GST samples, produced sperately from the files above ###
-        # Should be from ttX-tXq_dim6TopMay20GST_testV2HiggsInterferenceWithLL_GEN_UL17-GEN summary tree sample
-        "ttll_r0"    : "fit_coeffs/H_int_studies/fitparams_testV2_noNormScalby500_ttllUL17testV2HiggsInterferenceWithlldim6TopMay20GSTrun0.txt",
-        "ttll_r1"    : "fit_coeffs/H_int_studies/fitparams_testV2_noNormScalby500_ttllUL17testV2HiggsInterferenceWithlldim6TopMay20GSTrun1.txt",
-        "ttll_r2"    : "fit_coeffs/H_int_studies/fitparams_testV2_noNormScalby500_ttllUL17testV2HiggsInterferenceWithlldim6TopMay20GSTrun2.txt",
-        "ttllNoH_r0" : "fit_coeffs/H_int_studies/fitparams_testV2_noNormScalby500_ttllNoHiggsUL17testV2HiggsInterferenceWithlldim6TopMay20GSTrun0.txt",
-        "ttllNoH_r1" : "fit_coeffs/H_int_studies/fitparams_testV2_noNormScalby500_ttllNoHiggsUL17testV2HiggsInterferenceWithlldim6TopMay20GSTrun1.txt",
-        "ttllNoH_r2" : "fit_coeffs/H_int_studies/fitparams_testV2_noNormScalby500_ttllNoHiggsUL17testV2HiggsInterferenceWithlldim6TopMay20GSTrun2.txt",
-        "ttHtoll_r0" : "fit_coeffs/H_int_studies/fitparams_testV2_noNormScalby500_ttHTOllUL17testV2HiggsInterferenceWithlldim6TopMay20GSTMatchOffrun0.txt",
-        "ttHtoll_r1" : "fit_coeffs/H_int_studies/fitparams_testV2_noNormScalby500_ttHTOllUL17testV2HiggsInterferenceWithlldim6TopMay20GSTMatchOffrun1.txt",
-        "ttHtoll_r2" : "fit_coeffs/H_int_studies/fitparams_testV2_noNormScalby500_ttHTOllUL17testV2HiggsInterferenceWithlldim6TopMay20GSTMatchOffrun2.txt",
-        "tllq_r0"    : "fit_coeffs/H_int_studies/fitparams_testV2_noNormScalby500_tllq4fNoSchanWUL17testV2HiggsInterferenceWithlldim6TopMay20GSTrun0.txt",
-        "tllq_r1"    : "fit_coeffs/H_int_studies/fitparams_testV2_noNormScalby500_tllq4fNoSchanWUL17testV2HiggsInterferenceWithlldim6TopMay20GSTrun1.txt",
-        "tllq_r2"    : "fit_coeffs/H_int_studies/fitparams_testV2_noNormScalby500_tllq4fNoSchanWUL17testV2HiggsInterferenceWithlldim6TopMay20GSTrun2.txt",
-        "tllqNoH_r0" : "fit_coeffs/H_int_studies/fitparams_testV2_noNormScalby500_tllq4fNoSchanWNoHiggs0pUL17testV2HiggsInterferenceWithlldim6TopMay20GSTrun0.txt",
-        "tllqNoH_r1" : "fit_coeffs/H_int_studies/fitparams_testV2_noNormScalby500_tllq4fNoSchanWNoHiggs0pUL17testV2HiggsInterferenceWithlldim6TopMay20GSTrun1.txt",
-        "tllqNoH_r2" : "fit_coeffs/H_int_studies/fitparams_testV2_noNormScalby500_tllq4fNoSchanWNoHiggs0pUL17testV2HiggsInterferenceWithlldim6TopMay20GSTrun2.txt",
-        "tHtollq_r0" : "fit_coeffs/H_int_studies/fitparams_testV2_noNormScalby500_tHTOllq4fNoSchanWUL17testV2HiggsInterferenceWithlldim6TopMay20GSTrun0.txt",
-        "tHtollq_r1" : "fit_coeffs/H_int_studies/fitparams_testV2_noNormScalby500_tHTOllq4fNoSchanWUL17testV2HiggsInterferenceWithlldim6TopMay20GSTrun1.txt",
-        "tHtollq_r2" : "fit_coeffs/H_int_studies/fitparams_testV2_noNormScalby500_tHTOllq4fNoSchanWUL17testV2HiggsInterferenceWithlldim6TopMay20GSTrun2.txt",
-        ### These should be exactly the same as the above two sets of samples, just ran through quad plotting script at the same time ###
-        "ttll_sep"       : "fit_coeffs/H_int_studies/SamplesProcessedSeparate/fitparams_test_noNormScalby500_ttllUL17testHiggsInterferenceWithlldim6TopMay20GSTrun0.txt",
-        "ttll_sep_r0"    : "fit_coeffs/H_int_studies/SamplesProcessedSeparate/fitparams_test_noNormScalby500_ttllUL17testV2HiggsInterferenceWithlldim6TopMay20GSTrun0.txt",
-        "ttll_sep_r1"    : "fit_coeffs/H_int_studies/SamplesProcessedSeparate/fitparams_test_noNormScalby500_ttllUL17testV2HiggsInterferenceWithlldim6TopMay20GSTrun1.txt",
-        "ttll_sep_r2"    : "fit_coeffs/H_int_studies/SamplesProcessedSeparate/fitparams_test_noNormScalby500_ttllUL17testV2HiggsInterferenceWithlldim6TopMay20GSTrun2.txt",
-        "ttllNoH_sep"    : "fit_coeffs/H_int_studies/SamplesProcessedSeparate/fitparams_test_noNormScalby500_ttllNoHiggsUL17testHiggsInterferenceWithlldim6TopMay20GSTrun0.txt",
-        "ttllNoH_sep_r0" : "fit_coeffs/H_int_studies/SamplesProcessedSeparate/fitparams_test_noNormScalby500_ttllNoHiggsUL17testV2HiggsInterferenceWithlldim6TopMay20GSTrun0.txt",
-        "ttllNoH_sep_r1" : "fit_coeffs/H_int_studies/SamplesProcessedSeparate/fitparams_test_noNormScalby500_ttllNoHiggsUL17testV2HiggsInterferenceWithlldim6TopMay20GSTrun1.txt",
-        "ttllNoH_sep_r2" : "fit_coeffs/H_int_studies/SamplesProcessedSeparate/fitparams_test_noNormScalby500_ttllNoHiggsUL17testV2HiggsInterferenceWithlldim6TopMay20GSTrun2.txt",
-        "ttHtoll_sep"    : "fit_coeffs/H_int_studies/SamplesProcessedSeparate/fitparams_test_noNormScalby500_ttHTOllUL17testHiggsInterferenceWithlldim6TopMay20GSTMatchOffrun0.txt",
-        "ttHtoll_sep_r0" : "fit_coeffs/H_int_studies/SamplesProcessedSeparate/fitparams_test_noNormScalby500_ttHTOllUL17testV2HiggsInterferenceWithlldim6TopMay20GSTMatchOffrun0.txt",
-        "ttHtoll_sep_r1" : "fit_coeffs/H_int_studies/SamplesProcessedSeparate/fitparams_test_noNormScalby500_ttHTOllUL17testV2HiggsInterferenceWithlldim6TopMay20GSTMatchOffrun1.txt",
-        "ttHtoll_sep_r2" : "fit_coeffs/H_int_studies/SamplesProcessedSeparate/fitparams_test_noNormScalby500_ttHTOllUL17testV2HiggsInterferenceWithlldim6TopMay20GSTMatchOffrun2.txt",
-        "tllq_sep"       : "fit_coeffs/H_int_studies/SamplesProcessedSeparate/fitparams_test_noNormScalby500_tllq4fNoSchanWUL17testHiggsInterferenceWithlldim6TopMay20GSTrun1.txt",
-        "tllq_sep_r0"    : "fit_coeffs/H_int_studies/SamplesProcessedSeparate/fitparams_test_noNormScalby500_tllq4fNoSchanWUL17testV2HiggsInterferenceWithlldim6TopMay20GSTrun0.txt",
-        "tllq_sep_r1"    : "fit_coeffs/H_int_studies/SamplesProcessedSeparate/fitparams_test_noNormScalby500_tllq4fNoSchanWUL17testV2HiggsInterferenceWithlldim6TopMay20GSTrun1.txt",
-        "tllq_sep_r2"    : "fit_coeffs/H_int_studies/SamplesProcessedSeparate/fitparams_test_noNormScalby500_tllq4fNoSchanWUL17testV2HiggsInterferenceWithlldim6TopMay20GSTrun2.txt",
-        "tllqNoH_sep"    : "fit_coeffs/H_int_studies/SamplesProcessedSeparate/fitparams_test_noNormScalby500_tllq4fNoSchanWNoHiggs0pUL17testHiggsInterferenceWithlldim6TopMay20GSTrun1.txt",
-        "tllqNoH_sep_r0" : "fit_coeffs/H_int_studies/SamplesProcessedSeparate/fitparams_test_noNormScalby500_tllq4fNoSchanWNoHiggs0pUL17testV2HiggsInterferenceWithlldim6TopMay20GSTrun0.txt",
-        "tllqNoH_sep_r1" : "fit_coeffs/H_int_studies/SamplesProcessedSeparate/fitparams_test_noNormScalby500_tllq4fNoSchanWNoHiggs0pUL17testV2HiggsInterferenceWithlldim6TopMay20GSTrun1.txt",
-        "tllqNoH_sep_r2" : "fit_coeffs/H_int_studies/SamplesProcessedSeparate/fitparams_test_noNormScalby500_tllq4fNoSchanWNoHiggs0pUL17testV2HiggsInterferenceWithlldim6TopMay20GSTrun2.txt",
-        "tHtollq_sep"    : "fit_coeffs/H_int_studies/SamplesProcessedSeparate/fitparams_test_noNormScalby500_tHTOllq4fNoSchanWUL17testHiggsInterferenceWithlldim6TopMay20GSTrun0.txt",
-        "tHtollq_sep_r0" : "fit_coeffs/H_int_studies/SamplesProcessedSeparate/fitparams_test_noNormScalby500_tHTOllq4fNoSchanWUL17testV2HiggsInterferenceWithlldim6TopMay20GSTrun0.txt",
-        "tHtollq_sep_r1" : "fit_coeffs/H_int_studies/SamplesProcessedSeparate/fitparams_test_noNormScalby500_tHTOllq4fNoSchanWUL17testV2HiggsInterferenceWithlldim6TopMay20GSTrun1.txt",
-        "tHtollq_sep_r2" : "fit_coeffs/H_int_studies/SamplesProcessedSeparate/fitparams_test_noNormScalby500_tHTOllq4fNoSchanWUL17testV2HiggsInterferenceWithlldim6TopMay20GSTrun2.txt",
-        ### Same testV2HiggsInterferenceWithlldim6TopMay20GST, but ran through LHE and GEN and sumamry tree step together with the originals ###
-        # These should be the ttX-tXq_dim6TopMay20GST_testBothSetsOfSamplesTogetherHiggsInterferenceWithLL_GEN_UL17-GEN summary tree samples
-        "ttll_tog"       : "fit_coeffs/H_int_studies/SamplesProcessedTog/fitparams_testV2_noNormScalby500_ttllUL17testHiggsInterferenceWithlldim6TopMay20GSTrun0.txt",
-        "ttll_tog_r0"    : "fit_coeffs/H_int_studies/SamplesProcessedTog/fitparams_testV2_noNormScalby500_ttllUL17testV2HiggsInterferenceWithlldim6TopMay20GSTrun0.txt",
-        "ttll_tog_r1"    : "fit_coeffs/H_int_studies/SamplesProcessedTog/fitparams_testV2_noNormScalby500_ttllUL17testV2HiggsInterferenceWithlldim6TopMay20GSTrun1.txt",
-        "ttll_tog_r2"    : "fit_coeffs/H_int_studies/SamplesProcessedTog/fitparams_testV2_noNormScalby500_ttllUL17testV2HiggsInterferenceWithlldim6TopMay20GSTrun2.txt",
-        "ttllNoH_tog"    : "fit_coeffs/H_int_studies/SamplesProcessedTog/fitparams_testV2_noNormScalby500_ttllNoHiggsUL17testHiggsInterferenceWithlldim6TopMay20GSTrun0.txt",
-        "ttllNoH_tog_r0" : "fit_coeffs/H_int_studies/SamplesProcessedTog/fitparams_testV2_noNormScalby500_ttllNoHiggsUL17testV2HiggsInterferenceWithlldim6TopMay20GSTrun0.txt",
-        "ttllNoH_tog_r1" : "fit_coeffs/H_int_studies/SamplesProcessedTog/fitparams_testV2_noNormScalby500_ttllNoHiggsUL17testV2HiggsInterferenceWithlldim6TopMay20GSTrun1.txt",
-        "ttllNoH_tog_r2" : "fit_coeffs/H_int_studies/SamplesProcessedTog/fitparams_testV2_noNormScalby500_ttllNoHiggsUL17testV2HiggsInterferenceWithlldim6TopMay20GSTrun2.txt",
-        "ttHtoll_tog"    : "fit_coeffs/H_int_studies/SamplesProcessedTog/fitparams_testV2_noNormScalby500_ttHTOllUL17testHiggsInterferenceWithlldim6TopMay20GSTMatchOffrun0.txt",
-        "ttHtoll_tog_r0" : "fit_coeffs/H_int_studies/SamplesProcessedTog/fitparams_testV2_noNormScalby500_ttHTOllUL17testV2HiggsInterferenceWithlldim6TopMay20GSTMatchOffrun0.txt",
-        "ttHtoll_tog_r1" : "fit_coeffs/H_int_studies/SamplesProcessedTog/fitparams_testV2_noNormScalby500_ttHTOllUL17testV2HiggsInterferenceWithlldim6TopMay20GSTMatchOffrun1.txt",
-        "ttHtoll_tog_r2" : "fit_coeffs/H_int_studies/SamplesProcessedTog/fitparams_testV2_noNormScalby500_ttHTOllUL17testV2HiggsInterferenceWithlldim6TopMay20GSTMatchOffrun2.txt",
-        "tllq_tog"       : "fit_coeffs/H_int_studies/SamplesProcessedTog/fitparams_testV2_noNormScalby500_tllq4fNoSchanWUL17testHiggsInterferenceWithlldim6TopMay20GSTrun1.txt",
-        "tllq_tog_r0"    : "fit_coeffs/H_int_studies/SamplesProcessedTog/fitparams_testV2_noNormScalby500_tllq4fNoSchanWUL17testV2HiggsInterferenceWithlldim6TopMay20GSTrun0.txt",
-        "tllq_tog_r1"    : "fit_coeffs/H_int_studies/SamplesProcessedTog/fitparams_testV2_noNormScalby500_tllq4fNoSchanWUL17testV2HiggsInterferenceWithlldim6TopMay20GSTrun1.txt",
-        "tllq_tog_r2"    : "fit_coeffs/H_int_studies/SamplesProcessedTog/fitparams_testV2_noNormScalby500_tllq4fNoSchanWUL17testV2HiggsInterferenceWithlldim6TopMay20GSTrun2.txt",
-        "tllqNoH_tog"    : "fit_coeffs/H_int_studies/SamplesProcessedTog/fitparams_testV2_noNormScalby500_tllq4fNoSchanWNoHiggs0pUL17testHiggsInterferenceWithlldim6TopMay20GSTrun1.txt",
-        "tllqNoH_tog_r0" : "fit_coeffs/H_int_studies/SamplesProcessedTog/fitparams_testV2_noNormScalby500_tllq4fNoSchanWNoHiggs0pUL17testV2HiggsInterferenceWithlldim6TopMay20GSTrun0.txt",
-        "tllqNoH_tog_r1" : "fit_coeffs/H_int_studies/SamplesProcessedTog/fitparams_testV2_noNormScalby500_tllq4fNoSchanWNoHiggs0pUL17testV2HiggsInterferenceWithlldim6TopMay20GSTrun1.txt",
-        "tllqNoH_tog_r2" : "fit_coeffs/H_int_studies/SamplesProcessedTog/fitparams_testV2_noNormScalby500_tllq4fNoSchanWNoHiggs0pUL17testV2HiggsInterferenceWithlldim6TopMay20GSTrun2.txt",
-        "tHtollq_tog"    : "fit_coeffs/H_int_studies/SamplesProcessedTog/fitparams_testV2_noNormScalby500_tHTOllq4fNoSchanWUL17testHiggsInterferenceWithlldim6TopMay20GSTrun0.txt",
-        "tHtollq_tog_r0" : "fit_coeffs/H_int_studies/SamplesProcessedTog/fitparams_testV2_noNormScalby500_tHTOllq4fNoSchanWUL17testV2HiggsInterferenceWithlldim6TopMay20GSTrun0.txt",
-        "tHtollq_tog_r1" : "fit_coeffs/H_int_studies/SamplesProcessedTog/fitparams_testV2_noNormScalby500_tHTOllq4fNoSchanWUL17testV2HiggsInterferenceWithlldim6TopMay20GSTrun1.txt",
-        "tHtollq_tog_r2" : "fit_coeffs/H_int_studies/SamplesProcessedTog/fitparams_testV2_noNormScalby500_tHTOllq4fNoSchanWUL17testV2HiggsInterferenceWithlldim6TopMay20GSTrun2.txt",
-        ### Same testV2HiggsInterferenceWithlldim6TopMay20GST, but ran through LHE and GEN and sumamry tree step together with the originals, so same as above but run rerunning to see if get same thing###
-        # These shuld be the ttX-tXq_dim6TopMay20GST_testBothSetsOfSamplesTogetherHiggsInterferenceWithLL-rerunLHE_GEN_UL17-GEN summary tree samples
-        "ttll_togRerun"       : "fit_coeffs/H_int_studies/SamplesProcessedTog-rerunLHE/fitparams_testV2_noNormScalby500_ttllUL17testHiggsInterferenceWithlldim6TopMay20GSTrun0.txt",
-        "ttll_togRerun_r0"    : "fit_coeffs/H_int_studies/SamplesProcessedTog-rerunLHE/fitparams_testV2_noNormScalby500_ttllUL17testV2HiggsInterferenceWithlldim6TopMay20GSTrun0.txt",
-        "ttll_togRerun_r1"    : "fit_coeffs/H_int_studies/SamplesProcessedTog-rerunLHE/fitparams_testV2_noNormScalby500_ttllUL17testV2HiggsInterferenceWithlldim6TopMay20GSTrun1.txt",
-        "ttll_togRerun_r2"    : "fit_coeffs/H_int_studies/SamplesProcessedTog-rerunLHE/fitparams_testV2_noNormScalby500_ttllUL17testV2HiggsInterferenceWithlldim6TopMay20GSTrun2.txt",
-        "ttllNoH_togRerun"    : "fit_coeffs/H_int_studies/SamplesProcessedTog-rerunLHE/fitparams_testV2_noNormScalby500_ttllNoHiggsUL17testHiggsInterferenceWithlldim6TopMay20GSTrun0.txt",
-        "ttllNoH_togRerun_r0" : "fit_coeffs/H_int_studies/SamplesProcessedTog-rerunLHE/fitparams_testV2_noNormScalby500_ttllNoHiggsUL17testV2HiggsInterferenceWithlldim6TopMay20GSTrun0.txt",
-        "ttllNoH_togRerun_r1" : "fit_coeffs/H_int_studies/SamplesProcessedTog-rerunLHE/fitparams_testV2_noNormScalby500_ttllNoHiggsUL17testV2HiggsInterferenceWithlldim6TopMay20GSTrun1.txt",
-        "ttllNoH_togRerun_r2" : "fit_coeffs/H_int_studies/SamplesProcessedTog-rerunLHE/fitparams_testV2_noNormScalby500_ttllNoHiggsUL17testV2HiggsInterferenceWithlldim6TopMay20GSTrun2.txt",
-        "ttHtoll_togRerun"    : "fit_coeffs/H_int_studies/SamplesProcessedTog-rerunLHE/fitparams_testV2_noNormScalby500_ttHTOllUL17testHiggsInterferenceWithlldim6TopMay20GSTMatchOffrun0.txt",
-        "ttHtoll_togRerun_r0" : "fit_coeffs/H_int_studies/SamplesProcessedTog-rerunLHE/fitparams_testV2_noNormScalby500_ttHTOllUL17testV2HiggsInterferenceWithlldim6TopMay20GSTMatchOffrun0.txt",
-        "ttHtoll_togRerun_r1" : "fit_coeffs/H_int_studies/SamplesProcessedTog-rerunLHE/fitparams_testV2_noNormScalby500_ttHTOllUL17testV2HiggsInterferenceWithlldim6TopMay20GSTMatchOffrun1.txt",
-        "ttHtoll_togRerun_r2" : "fit_coeffs/H_int_studies/SamplesProcessedTog-rerunLHE/fitparams_testV2_noNormScalby500_ttHTOllUL17testV2HiggsInterferenceWithlldim6TopMay20GSTMatchOffrun2.txt",
-        "tllq_togRerun"       : "fit_coeffs/H_int_studies/SamplesProcessedTog-rerunLHE/fitparams_testV2_noNormScalby500_tllq4fNoSchanWUL17testHiggsInterferenceWithlldim6TopMay20GSTrun1.txt",
-        "tllq_togRerun_r0"    : "fit_coeffs/H_int_studies/SamplesProcessedTog-rerunLHE/fitparams_testV2_noNormScalby500_tllq4fNoSchanWUL17testV2HiggsInterferenceWithlldim6TopMay20GSTrun0.txt",
-        "tllq_togRerun_r1"    : "fit_coeffs/H_int_studies/SamplesProcessedTog-rerunLHE/fitparams_testV2_noNormScalby500_tllq4fNoSchanWUL17testV2HiggsInterferenceWithlldim6TopMay20GSTrun1.txt",
-        "tllq_togRerun_r2"    : "fit_coeffs/H_int_studies/SamplesProcessedTog-rerunLHE/fitparams_testV2_noNormScalby500_tllq4fNoSchanWUL17testV2HiggsInterferenceWithlldim6TopMay20GSTrun2.txt",
-        "tllqNoH_togRerun"    : "fit_coeffs/H_int_studies/SamplesProcessedTog-rerunLHE/fitparams_testV2_noNormScalby500_tllq4fNoSchanWNoHiggs0pUL17testHiggsInterferenceWithlldim6TopMay20GSTrun1.txt",
-        "tllqNoH_togRerun_r0" : "fit_coeffs/H_int_studies/SamplesProcessedTog-rerunLHE/fitparams_testV2_noNormScalby500_tllq4fNoSchanWNoHiggs0pUL17testV2HiggsInterferenceWithlldim6TopMay20GSTrun0.txt",
-        "tllqNoH_togRerun_r1" : "fit_coeffs/H_int_studies/SamplesProcessedTog-rerunLHE/fitparams_testV2_noNormScalby500_tllq4fNoSchanWNoHiggs0pUL17testV2HiggsInterferenceWithlldim6TopMay20GSTrun1.txt",
-        "tllqNoH_togRerun_r2" : "fit_coeffs/H_int_studies/SamplesProcessedTog-rerunLHE/fitparams_testV2_noNormScalby500_tllq4fNoSchanWNoHiggs0pUL17testV2HiggsInterferenceWithlldim6TopMay20GSTrun2.txt",
-        "tHtollq_togRerun"    : "fit_coeffs/H_int_studies/SamplesProcessedTog-rerunLHE/fitparams_testV2_noNormScalby500_tHTOllq4fNoSchanWUL17testHiggsInterferenceWithlldim6TopMay20GSTrun0.txt",
-        "tHtollq_togRerun_r0" : "fit_coeffs/H_int_studies/SamplesProcessedTog-rerunLHE/fitparams_testV2_noNormScalby500_tHTOllq4fNoSchanWUL17testV2HiggsInterferenceWithlldim6TopMay20GSTrun0.txt",
-        "tHtollq_togRerun_r1" : "fit_coeffs/H_int_studies/SamplesProcessedTog-rerunLHE/fitparams_testV2_noNormScalby500_tHTOllq4fNoSchanWUL17testV2HiggsInterferenceWithlldim6TopMay20GSTrun1.txt",
-        "tHtollq_togRerun_r2" : "fit_coeffs/H_int_studies/SamplesProcessedTog-rerunLHE/fitparams_testV2_noNormScalby500_tHTOllq4fNoSchanWUL17testV2HiggsInterferenceWithlldim6TopMay20GSTrun2.txt",
     }
 
     all_fits = {}
@@ -670,4 +642,5 @@ def main_for_hll_int_checks():
 
 # Run one of the main functions
 #main()
-main_for_hll_int_checks()
+#main_for_hll_int_checks()
+main_for_finding_start_pts()
