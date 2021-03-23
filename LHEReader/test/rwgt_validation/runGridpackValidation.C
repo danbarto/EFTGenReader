@@ -22,45 +22,19 @@
 #include "EFTGenReader/EFTHelperUtilities/interface/TH1EFT.h"
 #include "EFTGenReader/EFTHelperUtilities/interface/Stopwatch.h"
 #include "EFTGenReader/EFTHelperUtilities/interface/split_string.h"
-//#include "makeEFTPlots.h"
 #include "make1DXsecPlots.h"
 
-/*
-    This script does the following:
-        - Splits the plots by WC
-        - 1D Inclusive Xsec WC scaling plots
-        - Overlays multiple runs on the same plot
-        - Overlays dedicated reference points on the corresponding plots
-*/
+// This script can do the following:
+//     - Splits the plots by WC
+//     - 1D Inclusive Xsec WC scaling plots
+//     - Overlays multiple runs on the same plot
+//     - Overlays dedicated reference points on the corresponding plots
 
-//Ex: /hadoop/store/user/awightma/gridpack_scans/2018_05_06/scanpoints/ttH_2HeavyScan10kPilot_run0_scanpoints.txt
 
 const std::string kMGStart   = "MGStart";   // The tag we use to designate MadGraph starting point in the scanpoints file
 const std::string kOrig      = "original";
 const std::string kOutputDir = "read_lhe_outputs";
 const std::string kFitCoeffSaveDir = "fit_coeffs";
-
-/*
-struct customPointInfo {
-    TString proc_name;
-    TString type;
-    TString wc_name;
-    double x;
-    double y;
-    double err;
-};
-*/
-
-/*
-// Print info about customPointsInfo object
-void print_customPointInfo_object(std::vector<customPointInfo> points_info){
-    for (int i=0; i<points_info.size(); i++){
-        customPointInfo s = points_info.at(i);
-        std::cout << "\nPrinting info about customPointInfo struct:" << std::endl;
-        std::cout << "\tProc name: " << s.proc_name << ", Type: " << s.type << ", WC: " << s.wc_name << ", x val: " << s.x << ", y val: " << s.y << ", error: " << s.err << std::endl;
-    }
-}
-*/
 
 // Checks a string to see if it has UL16, UL16APV, UL17, or UL18 in it or returns an empty string
 TString findULYear(TString str){
@@ -303,13 +277,16 @@ void runit(TString output_name,TString input_rundirs_spec,TString ref_rundirs_sp
     };
     ////////////////////////////////////
 
-    //return ;
 
     Stopwatch sw;
 
     std::vector<WCFit> target_fits;
     std::vector<WCFit> ref_fits;
     std::vector<WCPoint> ref_pts;
+
+    ///////////////////////////////////////////////////////////////////////////////
+    //// Very messy pheno paper stuff that should get cleaned up at some point ////
+    ///////////////////////////////////////////////////////////////////////////////
 
     // This will get filled with the params from arxiv 1607.05330 and 1601.08193 and passed to the plotting script
     // to be plotted for comparison with our 0j and 0+1j fits. The form of the vector is more or less:
@@ -378,6 +355,7 @@ void runit(TString output_name,TString input_rundirs_spec,TString ref_rundirs_sp
     }
     //ptsMap["ttH"]["_lo"]  = { {-10,} , {-5,} , {0,sm_ttH_lo} , {5,}, {10,} };
     //ptsMap["ttH"]["_nlo"] = { {-5,} , {0,sm_ttH_nlo} , {5,} };
+    ///////////////////////////////////////////////////////////////////////////////
 
 
     WCPoint sm_pt("smpt");
@@ -386,8 +364,8 @@ void runit(TString output_name,TString input_rundirs_spec,TString ref_rundirs_sp
 
     PlotOptions xsec_plt_ops_1d;
     xsec_plt_ops_1d.output_dir = kOutputDir;
-    xsec_plt_ops_1d.setXLimits(0.0,0.0);
-    xsec_plt_ops_1d.setYLimits(0.0,1.3);
+    //xsec_plt_ops_1d.setXLimits(0.0,0.0); // Why? Why here? Let's not
+    //xsec_plt_ops_1d.setYLimits(0.0,1.3); // Same comment
 
     std::vector<TString> all_dirs,tar_dirs,ref_dirs;
     TString fdir;
@@ -437,30 +415,6 @@ void runit(TString output_name,TString input_rundirs_spec,TString ref_rundirs_sp
         std::string grp_tag   = words.at(2);
         std::string run_label = words.at(3);
 
-        /* This is all related to reading the scanpoints files, which is highly dependent on the naming scheme used for the samples
-
-        std::string scanpoints_dir = getScanPointsDirectory(fdir.Data());
-        std::string scanpoints_fpath = scanpoints_dir + process + "_" + grp_tag + "_" + run_label + "_scanpoints.txt";
-        std::vector<WCPoint> scan_pts = parseScanPointsFile(scanpoints_fpath);
-
-        WCPoint start_pt;
-        bool found_start = false;
-        for (auto& wc_pt: scan_pts) {
-            if (wc_pt.tag == kMGStart) {
-                start_pt = wc_pt;
-                start_pt.wgt = 0.0;
-                found_start = true;
-                break;
-            }
-        }
-
-        if (!found_start) {
-            // Likely b/c the gridpack was produced before the scanpoint file was implemented, or it got deleted/moved
-            std::cout << "[ERROR] Unable to find starting point in scanpoints file!" << std::endl;
-            continue;
-        }
-        */
-
         int chain_entries = chain.GetEntries();
         int last_entry = chain_entries;
         if (chain_entries > 100000) { // 100k takes about 10min
@@ -508,6 +462,8 @@ void runit(TString output_name,TString input_rundirs_spec,TString ref_rundirs_sp
         chain.SetBranchAddress("genLep_pt3",&genLep_pt3_intree);
         chain.SetBranchAddress("genJet_pt4",&genJet_pt4_intree);
 
+        //////////////////////////////////
+        // For 1d plots, very hardcoded //
         // Set up the wc point string (depends a lot on the naming scheme)
         std::map<string,string> ref_pts_dict;
         //std::string wcname = "ctG";
@@ -525,6 +481,7 @@ void runit(TString output_name,TString input_rundirs_spec,TString ref_rundirs_sp
         std::cout << "Run label: " << run_label << " , Dictionary entry: " << ref_pts_dict[run_label] << std::endl;
         std::string pt_str = ref_pts_dict[run_label];
         WCPoint ref_fit_pt = WCPoint(pt_str);
+        //////////////////////////////////
 
         double start_pt_xsec=0;
         double originalXWGTUP_intree_val=0; // Should be same for all events
@@ -534,6 +491,7 @@ void runit(TString output_name,TString input_rundirs_spec,TString ref_rundirs_sp
         ofstream resids_file; // ResidTest
         resids_file.open("fit_resids_test_dir/test_resids_"+process+".txt"); // ResidTest
 
+        // Event loop
         sw.start("Full Loop");
         for (int i = first_entry; i < last_entry; i++) {
             sw.start("Event Loop");
@@ -671,7 +629,7 @@ void runit(TString output_name,TString input_rundirs_spec,TString ref_rundirs_sp
                     leg_tag = leg_tag + "+j LO ";
                 }
             } else if (comp_type == "tag"){
-                leg_tag = leg_tag + ul_str + grp_tag + run_label ;
+                leg_tag = leg_tag + "_" + grp_tag + "_" + run_label; // + "_" + ul_str;
             } else if (comp_type == "qCutScan") {
                 leg_tag = leg_tag + " 0+1p: xqcut10, " + tmp_tag(tmp_tag.Index("qCut"), tmp_tag.Length());
             } else if (comp_type == "matchScaleScan") {
@@ -708,7 +666,7 @@ void runit(TString output_name,TString input_rundirs_spec,TString ref_rundirs_sp
             target_fits.push_back(inclusive_fit);
 
             /*
-            // Make a custom WCFit that is made from points were cpQM is -cpQ3
+            // Make a custom WCFit that is made from points were cpQM is -cpQ3, for a very specific pheno paper check
             std::vector<WCPoint> fitPts_vect;
             for (int i=-5; i<=5; i=i+2){
                 std::cout << "FIRST LOOP!!! " << i << std::endl;
@@ -756,7 +714,6 @@ void runit(TString output_name,TString input_rundirs_spec,TString ref_rundirs_sp
         sw.readAllTimers(use_avg,norm_name);
     }
 
-    //throw std::runtime_error("");
     // Dynamically figure out which WC are present across all WCFits
     std::vector<std::string> wc_names;
     if (wc_names.size() == 0) {
@@ -816,12 +773,14 @@ void runit(TString output_name,TString input_rundirs_spec,TString ref_rundirs_sp
         }
         
         bool save_fits = false; // Don't save the fits for now
-        //bool save_fits = true; // Don't save the fits for now
         if (save_fits) {
             std::string fitparams_fpath = kOutputDir + "/" + "fitparams_" + curr_process + "_" + wc_name + ".txt";
             make_fitparams_file(fitparams_fpath,subset_fits);
         }
 
+
+        ///////////////////////////////////////////////////////
+        //// Very hard coded stuff for pheno paper studies ////
         // Fill the vector of specific quadratic fits to pass to the plot maker (right now just used for NLO fit comps)
         std::pair<std::string,std::vector<double>> LO_pair;
         std::pair<std::string,std::vector<double>> NLO_pair;
@@ -917,8 +876,8 @@ void runit(TString output_name,TString input_rundirs_spec,TString ref_rundirs_sp
         }
         //arxiv_fit_comps_vect.push_back(NLO_pair); // Comment out to not plot arxiv comps
         //arxiv_fit_comps_vect.push_back(LO_pair);  // Comment out to not plot arxiv comps
+        ///////////////////////////////////////////////////////
 
-        ///*
         make_1d_xsec_plot(
             xsec_plt_ops_1d,
             wc_name,
@@ -928,13 +887,11 @@ void runit(TString output_name,TString input_rundirs_spec,TString ref_rundirs_sp
             points_to_plot_with_errorbars,
             curr_process
         );
-        //*/
     }
     std::cout << "Finished!" << std::endl;
 }
 
 void runGridpackValidation(TString output_name,TString input_rundirs_spec,TString ref_rundirs_spec,TString grp_name="") {
-    //gStyle->SetPadRightMargin(0.2);
     gStyle->SetOptStat(0);
 
     runit(output_name,input_rundirs_spec,ref_rundirs_spec,grp_name);
