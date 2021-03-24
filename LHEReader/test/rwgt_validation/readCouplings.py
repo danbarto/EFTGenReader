@@ -3,6 +3,7 @@ import collections
 import copy
 import numpy as np
 import json
+import os
 
 ### Info about this script ###
 #    - This script is very messy, but includes a lot of functions for parsing WCFits
@@ -11,6 +12,14 @@ import json
 #    - Some of the functions are far too specific to be useful in general
 #    - So as it stands, this script is probably not really useful, but maybe some variant of it could someday be useful
 
+PROC_NAMES_SHORT = {
+    "ttHJet"                  : "ttHJet",
+    "ttlnuJet"                : "ttlnuJet",
+    "ttllNuNuJetNoHiggs"      : "ttllJet",
+    "ttbarJet"                : "ttbarJet",
+    "tHq4f"                   : "tHq",
+    "tllq4fNoSchanWNoHiggs0p" : "tllq"
+}
 
 ### Some WCPoints  ###
 
@@ -51,6 +60,26 @@ top19001lo_pt = {
     "ctlSi" : -6.52,
     "ctlTi" : -0.84,
     "sm" : 1.,
+}
+
+# For run with top19001 lo pt
+run5_2heavy2light = {
+    "cQq13" : 4.0,
+    "cQq83" : 6.0,
+    "cQq11" : 23.0,
+    "ctq1"  : -19.0,
+    "cQq81" : -13.0,
+    "ctq8"  : 10.0,
+}
+
+# For run with top19001 hi pt
+run6_2heavy2light = {
+    "cQq13" : -3.0,
+    "cQq83" : 4.0,
+    "cQq11" : -10.0,
+    "ctq1"  : 10.0,
+    "cQq81" : 17.0,
+    "ctq8"  : -13.0,
 }
 
 OLD_AN_PT = {
@@ -223,6 +252,27 @@ def get_pdiff(a,b):
         p = 100.*((float(a)-float(b))/((float(a)+float(b))/2.0))
     return p
 
+# Open a json file, given a name and a path
+def open_json(fpath,file_name):
+    fname = file_name+".json"
+    path_to_file = os.path.join(fpath,fname)
+    with open (path_to_file,"r") as f:
+        d = json.load(f)
+    return d
+
+# Combine two dictionaries
+def combine_dicts(d1,d2):
+    ret_dict = {}
+    for k in d1.keys():
+        if k in d2:
+            print "\nCannot combine these dictionaries, there is an overlap! Exiting...\n"
+            raise Exception
+    for k,v in d1.iteritems():
+        ret_dict[k] = v
+    for k,v in d2.iteritems():
+        ret_dict[k] = v
+    return ret_dict
+
 # Open a text file that we've dumped a WCFit into and put the info into a dictionary
 def read_fit_file_dump_dict(fpath):
     with open (fpath) as f:
@@ -241,8 +291,22 @@ def eval_fit(fit_dict,wcpt_dict):
     xsec = 0
     for wc_str, coeff_val in fit_dict.iteritems():
         wc1,wc2 = wc_str.split("*")
-        wc1_val = wcpt_dict[wc1]
-        wc2_val = wcpt_dict[wc2]
+        if wc1 not in wcpt_dict.keys():
+            if wc1 == "sm":
+                wc1_val = 1.0
+            else:
+                print "WARNING: No value specified for WC {wc}. Setting it to 0.".format(wc=wc1)
+                wc1_val = 0.0
+        else:
+            wc1_val = wcpt_dict[wc1]
+        if wc2 not in wcpt_dict.keys():
+            if wc2 == "sm":
+                wc2_val = 1.0
+            else:
+                print "WARNING: No value specified for WC {wc}. Setting it to 0.".format(wc=wc2)
+                wc2_val = 0.0
+        else:
+            wc2_val = wcpt_dict[wc2]
         xsec = xsec + wc1_val*wc2_val*coeff_val
     return xsec
 
@@ -296,8 +360,22 @@ def find_where_fit_crosses_threshold(quad_params,threshold):
             break
     return x,y
 
+# Gives you the name for a summary tree reader sample given proc, tag, run
+def reconstruct_sample_name(p,c,r):
+    sample_name = "output_{p}_{c}_{r}".format(p=p,c=c,r=r)
+    return sample_name
+
 
 ### More complex helper functions, probably only useful in specific cases ###
+
+# Takes as input a path to a dir (that should contain dumped fits), and then loops over all files in the dir and puts into dict
+def put_all_fits_from_a_dir_into_dict(dir_path):
+    d = {}
+    for f in os.listdir(dir_path):
+        p,c,r = (f.split(".")[0]).split("_") # Split the name (not including .txt extension) into process, coeff, run
+        tag = p+"_"+r[-1] # e.g. ttH_test_run0 -> ttH_0
+        d[tag] = read_fit_file_dump_dict(os.path.join(dir_path,f))
+    return d
 
 # Takes two fit dictionaries and returns a dictioinary with the percent difference between the values
 def get_fit_dicts_pdiff(d1,d2,threshold=None):
@@ -476,32 +554,12 @@ def find_start_pt_and_dump_to_JSON(fit_dicts,wc_lst,threshold,tag):
         json.dump(start_pts_dict, outfile)
 
 
+
+
 ### Main functions ###
 
-# Find the place where the WCs scale each process by a certain amount, to be used as the start point
-def main_for_finding_start_pts():
-    file_names = {
-        "ttHJet"   : "fit_coeffs/all22WCs/fitparams_smNorm_ttHJetUL17all22WCsBaselineStartPtTOP19001dim6TopMay20GSTrun0.txt",
-        "ttlnuJet" : "fit_coeffs/all22WCs/fitparams_smNorm_ttlnuJetUL17all22WCsBaselineStartPtTOP19001dim6TopMay20GSTrun0.txt",
-        "ttllJet"  : "fit_coeffs/all22WCs/fitparams_smNorm_ttllNuNuJetNoHiggsUL17all22WCsBaselineStartPtTOP19001dim6TopMay20GSTrun0.txt",
-        "tllq"     : "fit_coeffs/all22WCs/fitparams_smNorm_tllq4fNoSchanWNoHiggs0pUL17all22WCsBaselineStartPtTOP19001dim6TopMay20GSTrun0.txt",
-        "tHq"      : "fit_coeffs/all22WCs/fitparams_smNorm_tHq4fUL17all22WCsBaselineStartPtTOP19001dim6TopMay20GSTrun0.txt",
-        "ttbarJet" : "fit_coeffs/all22WCs/fitparams_smNorm_ttbarJetUL17all22WCsBaselineStartPtTOP19001dim6TopMay20GSTrun0.txt",
-    }
-    all_fits = {}
-    for tag,fname in file_names.iteritems():
-        f_dict = read_fit_file_dump_dict(fname)
-        all_fits[tag] = f_dict
-
-    find_start_pt_and_dump_to_JSON(all_fits,WC_LST,5.0,"startpts_scale_by_5p0")
-    find_start_pt_and_dump_to_JSON(all_fits,WC_LST,2.0,"startpts_scale_by_2p0")
-    find_start_pt_and_dump_to_JSON(all_fits,WC_LST,1.5,"startpts_scale_by_1p5")
-    find_start_pt_and_dump_to_JSON(all_fits,WC_LST,1.3,"startpts_scale_by_1p3")
-    find_start_pt_and_dump_to_JSON(all_fits,WC_LST,1.1,"startpts_scale_by_1p1")
-
-
 # This was the main function for what this script was originally designed for (i.e. trying to understand differences between fits from dim6=1 and dim6^2=2 samples)
-def main():
+def main_for_dim6SQ_checks():
 
     file_names = {
         "test" : "test.txt",
@@ -597,8 +655,6 @@ def main_for_hll_int_checks():
     samples_lst = ["ttll","ttllNoH","ttHtoll","tllq","tllqNoH","tHtollq"]
     run_lst = ["","_r0","_r1","_r2"]
 
-    # Printing various things about the different fit coeffecients
-
     '''
     # Compare the sample with mmll=10 in run card against the one original (which accidnetly had no mmll cut since was using ttH run card)
     print_pdiff_if_one_is_not_small(all_fits["ttHtollMLL10"],all_fits["ttHtoll"])
@@ -615,7 +671,6 @@ def main_for_hll_int_checks():
             #print_pdiff_if_one_is_not_small(all_fits[s],all_fits[s+"_tog"+r])
             #print_pdiff_if_one_is_not_small(all_fits[s],all_fits[s+"_togRerun"+r])
     '''
-
 
     #'''
     # Check 1 vs 2+3 for all samples:
@@ -638,9 +693,66 @@ def main_for_hll_int_checks():
             eval_two_fits_and_print_pdiff(tXq1,tXq2p3,p)
     #'''
 
+# Find the place where the WCs scale each process by a certain amount, to be used as the start point
+def main_for_finding_start_pts():
+    file_names = {
+        "ttHJet"   : "fit_coeffs/all22WCs/fitparams_smNorm_ttHJetUL17all22WCsBaselineStartPtTOP19001dim6TopMay20GSTrun0.txt",
+        "ttlnuJet" : "fit_coeffs/all22WCs/fitparams_smNorm_ttlnuJetUL17all22WCsBaselineStartPtTOP19001dim6TopMay20GSTrun0.txt",
+        "ttllJet"  : "fit_coeffs/all22WCs/fitparams_smNorm_ttllNuNuJetNoHiggsUL17all22WCsBaselineStartPtTOP19001dim6TopMay20GSTrun0.txt",
+        "tllq"     : "fit_coeffs/all22WCs/fitparams_smNorm_tllq4fNoSchanWNoHiggs0pUL17all22WCsBaselineStartPtTOP19001dim6TopMay20GSTrun0.txt",
+        "tHq"      : "fit_coeffs/all22WCs/fitparams_smNorm_tHq4fUL17all22WCsBaselineStartPtTOP19001dim6TopMay20GSTrun0.txt",
+        "ttbarJet" : "fit_coeffs/all22WCs/fitparams_smNorm_ttbarJetUL17all22WCsBaselineStartPtTOP19001dim6TopMay20GSTrun0.txt",
+    }
+    all_fits = {}
+    for tag,fname in file_names.iteritems():
+        f_dict = read_fit_file_dump_dict(fname)
+        all_fits[tag] = f_dict
+
+    find_start_pt_and_dump_to_JSON(all_fits,WC_LST,5.0,"startpts_scale_by_5p0")
+    find_start_pt_and_dump_to_JSON(all_fits,WC_LST,2.0,"startpts_scale_by_2p0")
+    find_start_pt_and_dump_to_JSON(all_fits,WC_LST,1.5,"startpts_scale_by_1p5")
+    find_start_pt_and_dump_to_JSON(all_fits,WC_LST,1.3,"startpts_scale_by_1p3")
+    find_start_pt_and_dump_to_JSON(all_fits,WC_LST,1.1,"startpts_scale_by_1p1")
+
+
+# Perform validation checks for the start points and reweighting
+def main_for_rwgt_validaiton():
+
+    run_lst = ["run0","run1","run2","run3","run4","run5","run6"]
+    p_lst = ["ttHJet","ttlnuJet","tHq4f","tllq4fNoSchanWNoHiggs0p","ttbarJet"]
+
+    orig_wgts = open_json("fit_coeffs/start_pt_checks/","xsec_at_start_pts")
+
+    # Put all of the start pts into dictionaries
+    all_start_pts = {}
+    start_pts_file_lst = ["startpts_scale_by_1p1","startpts_scale_by_1p3","startpts_scale_by_1p5","startpts_scale_by_2p0","startpts_scale_by_5p0"]
+    for idx,f_name in enumerate(start_pts_file_lst):
+        all_start_pts["run"+str(idx)] = open_json("fit_coeffs/start_pt_checks/start_pt_jsons",f_name)
+    # Put in the other two WCs that do not come from jsons (note these are used for all processes)
+    all_start_pts["run5"] = {}
+    all_start_pts["run6"] = {}
+    for p in p_lst:
+        all_start_pts["run5"][PROC_NAMES_SHORT[p]] = combine_dicts(top19001lo_pt,run5_2heavy2light)
+        all_start_pts["run6"][PROC_NAMES_SHORT[p]] = combine_dicts(top19001hi_pt,run6_2heavy2light)
+
+    # Put the fits into a dictionary
+    startPtScanV2 = put_all_fits_from_a_dir_into_dict("fit_coeffs/start_pt_checks/all22WCsStartPtCheckV2")
+
+    # Evaluate the fits at starting points for each sample
+    for p in p_lst:
+        print "\n",p,"\n"
+        for run in run_lst:
+            print run
+            sname = reconstruct_sample_name(p,"all22WCsStartPtCheckV2dim6TopMay20GST",run)
+            orig_wgt = orig_wgts[sname]
+            for tag,fit in startPtScanV2.iteritems():
+                if p not in tag: continue
+                rwgt_wgt = eval_fit(fit,all_start_pts[run][PROC_NAMES_SHORT[p]])
+                print "\t{tag}: orig wgt, rwgt wgt: {orig_wgt} {rwgt_wgt} -> {pdiff}".format(tag=tag,orig_wgt=orig_wgt,rwgt_wgt=rwgt_wgt,pdiff=get_pdiff(orig_wgt,rwgt_wgt))
 
 
 # Run one of the main functions
-#main()
+#main_for_dim6SQ_checks()
 #main_for_hll_int_checks()
-main_for_finding_start_pts()
+#main_for_finding_start_pts()
+main_for_rwgt_validaiton()
