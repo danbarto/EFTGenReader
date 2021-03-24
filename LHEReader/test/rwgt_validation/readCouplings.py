@@ -23,6 +23,7 @@ PROC_NAMES_SHORT = {
 
 ### Some WCPoints  ###
 
+
 top19001hi_pt = {
     "ctW"   : 2.87,
     "ctZ"   : 3.15,
@@ -80,6 +81,15 @@ run6_2heavy2light = {
     "ctq1"  : 10.0,
     "cQq81" : 17.0,
     "ctq8"  : -13.0,
+}
+
+for19001base_2heavy2light = {
+    "cQq13" : 3.0,
+    "cQq83" : -4.0,
+    "cQq11" : 15.0,
+    "ctq1"  : -12.0,
+    "cQq81" : 15.0,
+    "ctq8"  : -8.0,
 }
 
 OLD_AN_PT = {
@@ -140,6 +150,25 @@ top19001_ttWJet_pt = {
     "ctlSi"  : -9.99,
     "sm" : 1.,
 }
+top19001_ttZJet_pt = {
+    "ctW"     : -5.02,
+    "ctp"     : 32.91,
+    "cpQM"    : -8.06,
+    "ctei"    : 6.003,
+    "ctli"    : 10.16,
+    "cQei"    : 4.804,
+    "ctZ"     : -3.86,
+    "cQlMi"   : -7.15,
+    "cQl3i"   : -8.33,
+    "ctG"     : 1.606,
+    "ctlTi"   : 2.824,
+    "cbW"     : -3.82,
+    "cpQ3"    : -13.2,
+    "cptb"    : 14.49,
+    "cpt"     : -32.6,
+    "ctlSi"   : -7.06,
+}
+
 all2_pt = {
     "ctW"   : 2.0,
     "ctZ"   : 2.0,
@@ -235,8 +264,16 @@ sm_pt = {
     "ctei"  : 0.0,
     "ctlSi" : 0.0,
     "ctlTi" : 0.0,
+    "cQq13" : 0.0,
+    "cQq83" : 0.0,
+    "cQq11" : 0.0,
+    "ctq1"  : 0.0,
+    "cQq81" : 0.0,
+    "ctq8"  : 0.0,
     "sm" : 1.,
 }
+
+
 WC_LST = [ "ctW" , "ctZ" , "ctp" , "cpQM" , "ctG" , "cbW" , "cpQ3" , "cptb" , "cpt" , "cQl3i" , "cQlMi" , "cQei" , "ctli" , "ctei" , "ctlSi" , "ctlTi" , "cQq13", "cQq83", "cQq11", "ctq1" , "cQq81", "ctq8" ]
 
 ### General helper functions ###
@@ -555,6 +592,14 @@ def find_start_pt_and_dump_to_JSON(fit_dicts,wc_lst,threshold,tag):
 
 
 
+pt_top19001base = {
+    "ttHJet"   : combine_dicts(top19001_ttHJet_pt,for19001base_2heavy2light),
+    "ttlnuJet" : combine_dicts(top19001_ttWJet_pt,for19001base_2heavy2light),
+    "ttllJet"  : combine_dicts(top19001_ttZJet_pt,for19001base_2heavy2light),
+    "ttbarJet" : combine_dicts(top19001_ttZJet_pt,for19001base_2heavy2light),
+    "tllq"     : combine_dicts(top19001_ttHJet_pt,for19001base_2heavy2light),
+    "tHq"      : combine_dicts(top19001_ttZJet_pt,for19001base_2heavy2light),
+}
 
 ### Main functions ###
 
@@ -737,19 +782,44 @@ def main_for_rwgt_validaiton():
 
     # Put the fits into a dictionary
     startPtScanV2 = put_all_fits_from_a_dir_into_dict("fit_coeffs/start_pt_checks/all22WCsStartPtCheckV2")
+    startPtBase = put_all_fits_from_a_dir_into_dict("fit_coeffs/start_pt_checks/all22WCsBaselineStartPtTOP19001")
 
     # Evaluate the fits at starting points for each sample
     for p in p_lst:
         print "\n",p,"\n"
         for run in run_lst:
             print run
+            # Check all22WCsStartPtCheckV2dim6TopMay20GST samples
             sname = reconstruct_sample_name(p,"all22WCsStartPtCheckV2dim6TopMay20GST",run)
             orig_wgt = orig_wgts[sname]
             for tag,fit in startPtScanV2.iteritems():
                 if p not in tag: continue
                 rwgt_wgt = eval_fit(fit,all_start_pts[run][PROC_NAMES_SHORT[p]])
-                print "\t{tag}: orig wgt, rwgt wgt: {orig_wgt} {rwgt_wgt} -> {pdiff}".format(tag=tag,orig_wgt=orig_wgt,rwgt_wgt=rwgt_wgt,pdiff=get_pdiff(orig_wgt,rwgt_wgt))
+                print "\t{tag}: orig wgt, rwgt wgt: {orig_wgt} {rwgt_wgt} -> {pdiff}".format(tag=tag,orig_wgt=orig_wgt,rwgt_wgt=rwgt_wgt,pdiff=get_pdiff(rwgt_wgt,orig_wgt))
 
+            # Check all22WCsBaselineStartPtTOP19001dim6TopMay20GST samples
+            sname_19001base = reconstruct_sample_name(p,"all22WCsBaselineStartPtTOP19001dim6TopMay20GST","run0")
+            fit_19001base = startPtBase[p+"_0"]
+            rwgt_wgt_19001base = eval_fit(fit_19001base,all_start_pts[run][PROC_NAMES_SHORT[p]])
+            print "\t{tag}: orig wgt, rwgt wgt: {orig_wgt} {rwgt_wgt} -> {pdiff}".format(tag=p+" base",orig_wgt=orig_wgt,rwgt_wgt=rwgt_wgt_19001base,pdiff=get_pdiff(rwgt_wgt_19001base,orig_wgt))
+
+        # Also inclut the point based on TOP-19-001 start pt
+        print "top19001base"
+        sname_19001base = reconstruct_sample_name(p,"all22WCsBaselineStartPtTOP19001dim6TopMay20GST","run0")
+        orig_wgt_19001base = orig_wgts[sname_19001base]
+        for tag,fit in startPtScanV2.iteritems():
+            if p not in tag: continue
+            rwgt_wgt = eval_fit(fit,pt_top19001base[PROC_NAMES_SHORT[p]])
+            print "\t{tag}: orig wgt, rwgt wgt: {orig_wgt} {rwgt_wgt} -> {pdiff}".format(tag=tag,orig_wgt=orig_wgt_19001base,rwgt_wgt=rwgt_wgt,pdiff=get_pdiff(rwgt_wgt,orig_wgt_19001base))
+        fit_19001base = startPtBase[p+"_0"]
+        rwgt_wgt_19001base = eval_fit(fit_19001base,pt_top19001base[PROC_NAMES_SHORT[p]])
+        print "\t{tag}: orig wgt, rwgt wgt: {orig_wgt} {rwgt_wgt} -> {pdiff}".format(tag=p+" base",orig_wgt=orig_wgt_19001base,rwgt_wgt=rwgt_wgt_19001base,pdiff=get_pdiff(rwgt_wgt_19001base,orig_wgt_19001base))
+
+    #j = open_json("fit_coeffs/start_pt_checks/sample_info/","test")
+    #for sample,info in j.iteritems():
+        #if "timestamp" in sample: continue
+        #orig_wgt = info["xsecAtStartScaleToSM"]
+        #print orig_wgt
 
 # Run one of the main functions
 #main_for_dim6SQ_checks()
