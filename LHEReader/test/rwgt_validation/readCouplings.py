@@ -595,6 +595,42 @@ def find_start_pt_and_dump_to_JSON(fit_dicts,wc_lst,threshold,tag):
     with open(tag+".json","w") as outfile:
         json.dump(start_pts_dict, outfile)
 
+# Compare rwgt points to orig points
+# For the new start pt scan fits, and the "base" fits (i.e. TOP-19-001 start pts)
+def do_start_pt_comp(proc_lst, run_lst, all_start_pts, fit_dict_scan, orig_wgts_scan, sample_tag_scan, fit_dict_base, orig_wgts_base, sample_tag_base):
+
+    # Evaluate the fits at starting points for each sample
+    for p in proc_lst:
+        print "\n",p,"\n"
+
+        # Get fit and orig weight for pt based on TOP-19-001 start
+        fit_base = fit_dict_base[p+"_0"]
+        sname_base = reconstruct_sample_name(p,sample_tag_base,"run0")
+        orig_wgt_base = orig_wgts_base[sname_base]["xsecAtStartScaleToSM"]
+
+        # Loop over the 7 new start pts
+        for run in run_lst:
+            print run
+            # Check all22WCsStartPtCheckV2dim6TopMay20GST samples
+            sname = reconstruct_sample_name(p,sample_tag_scan,run)
+            orig_wgt = orig_wgts_scan[sname] # If using the manually produced json
+            #orig_wgt = orig_wgts_scan[sname]["xsecAtStartScaleToSM"] # For the automatically produced json
+            for tag,fit in fit_dict_scan.iteritems():
+                if p not in tag: continue
+                rwgt_wgt = eval_fit(fit,all_start_pts[run][PROC_NAMES_SHORT[p]])
+                print_fit_eval_info(tag,orig_wgt,rwgt_wgt)
+            # Check all22WCsBaselineStartPtTOP19001dim6TopMay20GST samples
+            rwgt_wgt_19001base = eval_fit(fit_base,all_start_pts[run][PROC_NAMES_SHORT[p]])
+            print_fit_eval_info(p+" base",orig_wgt,rwgt_wgt_19001base)
+
+        # Also include  the start pt based on TOP-19-001 start pt
+        print "top19001base"
+        for tag,fit in fit_dict_scan.iteritems():
+            if p not in tag: continue
+            rwgt_wgt = eval_fit(fit,pt_top19001base[PROC_NAMES_SHORT[p]])
+            print_fit_eval_info(tag,orig_wgt_base,rwgt_wgt)
+        rwgt_wgt_19001base = eval_fit(fit_base,pt_top19001base[PROC_NAMES_SHORT[p]])
+        print_fit_eval_info(p+" base",orig_wgt_base,rwgt_wgt_19001base)
 
 
 pt_top19001base = {
@@ -769,7 +805,8 @@ def main_for_finding_start_pts():
 def main_for_rwgt_validaiton():
 
     run_lst = ["run0","run1","run2","run3","run4","run5","run6"]
-    p_lst = ["ttHJet","ttlnuJet","tHq4f","tllq4fNoSchanWNoHiggs0p","ttbarJet"]
+    p_lst_no_ttll = ["ttHJet","ttlnuJet","tHq4f","tllq4fNoSchanWNoHiggs0p","ttbarJet"]
+    p_lst = ["ttHJet","ttlnuJet","ttllNuNuJetNoHiggs","tHq4f","tllq4fNoSchanWNoHiggs0p","ttbarJet"]
 
     orig_wgts = open_json("fit_coeffs/start_pt_checks/","xsec_at_start_pts")
     orig_wgts_19001base = open_json("fit_coeffs/start_pt_checks/sample_info/","fit_info_all22WCsBaselineStartPtTOP19001")
@@ -788,9 +825,9 @@ def main_for_rwgt_validaiton():
         all_start_pts["run6"][PROC_NAMES_SHORT[p]] = combine_dicts(top19001hi_pt,run6_2heavy2light)
 
     # Put the fits into a dictionary
-    startPtScan = put_all_fits_from_a_dir_into_dict("fit_coeffs/start_pt_checks/all22WCsStartPtCheck")
-    startPtScanV2 = put_all_fits_from_a_dir_into_dict("fit_coeffs/start_pt_checks/all22WCsStartPtCheckV2")
-    startPtBase = put_all_fits_from_a_dir_into_dict("fit_coeffs/start_pt_checks/all22WCsBaselineStartPtTOP19001")
+    startPtScan_fits   = put_all_fits_from_a_dir_into_dict("fit_coeffs/start_pt_checks/all22WCsStartPtCheck")
+    startPtScanV2_fits = put_all_fits_from_a_dir_into_dict("fit_coeffs/start_pt_checks/all22WCsStartPtCheckV2")
+    startPtBase_fits   = put_all_fits_from_a_dir_into_dict("fit_coeffs/start_pt_checks/all22WCsBaselineStartPtTOP19001")
 
     '''
     ########################################
@@ -809,10 +846,10 @@ def main_for_rwgt_validaiton():
             print "{s}\n\tv0,v1: {w0},{w1} -> {p}\n".format(s=sample,w0=v0_wgt_orig,w1=v1_wgt_orig,p=p)
 
     # Compare the samples' reweighted values to each other
-    for sample in startPtScanV2.keys():
+    for sample in startPtScanV2_fits.keys():
         print sample
-        fit_v0 = startPtScan[sample]
-        fit_v1 = startPtScanV2[sample]
+        fit_v0 = startPtScan_fits[sample]
+        fit_v1 = startPtScanV2_fits[sample]
         p = sample.split("_")[0]
         r = "run"+sample.split("_")[1]
         for run,point_dict in all_start_pts.iteritems():
@@ -826,46 +863,9 @@ def main_for_rwgt_validaiton():
     '''
 
     # Compare the rwgt points to the orig pts
+    do_start_pt_comp(p_lst_no_ttll, run_lst, all_start_pts, startPtScanV2_fits, orig_wgts, "all22WCsStartPtCheckV2dim6TopMay20GST", startPtBase_fits, orig_wgts_19001base, "all22WCsBaselineStartPtTOP19001dim6TopMay20GST")
+    #do_start_pt_comp(p_lst, run_lst, all_start_pts, startPtScan_fits, orig_wgts_all22WCsStartPtCheck, "all22WCsStartPtCheckdim6TopMay20GST", startPtBase_fits, orig_wgts_19001base, "all22WCsBaselineStartPtTOP19001dim6TopMay20GST")
 
-    fit_dict_start_pt_scan = startPtScanV2
-    orig_wgts_start_pt_scan = orig_wgts
-    sample_tag = "all22WCsStartPtCheckV2dim6TopMay20GST"
-    #fit_dict_start_pt_scan = startPtScan
-    #orig_wgts_start_pt_scan = orig_wgts_all22WCsStartPtCheck
-    #sample_tag = "all22WCsStartPtCheckdim6TopMay20GST"
-
-    # Evaluate the fits at starting points for each sample
-    for p in p_lst:
-        print "\n",p,"\n"
-
-        # Get fit and orig weight for pt based on TOP-19-001 start
-        fit_19001base = startPtBase[p+"_0"]
-        sname_19001base = reconstruct_sample_name(p,"all22WCsBaselineStartPtTOP19001dim6TopMay20GST","run0")
-        orig_wgt_19001base = orig_wgts_19001base[sname_19001base]["xsecAtStartScaleToSM"]
-
-        # Loop over the 7 new start pts
-        for run in run_lst:
-            print run
-            # Check all22WCsStartPtCheckV2dim6TopMay20GST samples
-            sname = reconstruct_sample_name(p,sample_tag,run)
-            orig_wgt = orig_wgts_start_pt_scan[sname] # If using the manually produced json
-            #orig_wgt = orig_wgts_start_pt_scan[sname]["xsecAtStartScaleToSM"] # For the automatically produced json
-            for tag,fit in fit_dict_start_pt_scan.iteritems():
-                if p not in tag: continue
-                rwgt_wgt = eval_fit(fit,all_start_pts[run][PROC_NAMES_SHORT[p]])
-                print_fit_eval_info(tag,orig_wgt,rwgt_wgt)
-            # Check all22WCsBaselineStartPtTOP19001dim6TopMay20GST samples
-            rwgt_wgt_19001base = eval_fit(fit_19001base,all_start_pts[run][PROC_NAMES_SHORT[p]])
-            print_fit_eval_info(p+" base",orig_wgt,rwgt_wgt_19001base)
-
-        # Also include  the start pt based on TOP-19-001 start pt
-        print "top19001base"
-        for tag,fit in fit_dict_start_pt_scan.iteritems():
-            if p not in tag: continue
-            rwgt_wgt = eval_fit(fit,pt_top19001base[PROC_NAMES_SHORT[p]])
-            print_fit_eval_info(tag,orig_wgt_19001base,rwgt_wgt)
-        rwgt_wgt_19001base = eval_fit(fit_19001base,pt_top19001base[PROC_NAMES_SHORT[p]])
-        print_fit_eval_info(p+" base",orig_wgt_19001base,rwgt_wgt_19001base)
 
 
 # Run one of the main functions
