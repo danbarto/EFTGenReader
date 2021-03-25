@@ -519,6 +519,11 @@ def print_pdiff_info(p_dict,threshold=None):
         if p !=0:
             print "\tNon zero quad:",t,p
 
+# Prints some info about weights at some point
+def print_fit_eval_info(tag,orig_wgt,rwgt_wgt):
+    pdiff = get_pdiff(rwgt_wgt,orig_wgt)
+    s = "\t{tag}: orig wgt, rwgt wgt: {orig_wgt} {rwgt_wgt} -> {p}".format(tag=tag,orig_wgt=orig_wgt,rwgt_wgt=rwgt_wgt,p=pdiff)
+    print s
 
 ### Very specific functions that are probably not useful for anything besides the very specifc case they were originally used for ###
 
@@ -767,6 +772,7 @@ def main_for_rwgt_validaiton():
     p_lst = ["ttHJet","ttlnuJet","tHq4f","tllq4fNoSchanWNoHiggs0p","ttbarJet"]
 
     orig_wgts = open_json("fit_coeffs/start_pt_checks/","xsec_at_start_pts")
+    orig_wgts_19001base = open_json("fit_coeffs/start_pt_checks/sample_info/","fit_info_all22WCsBaselineStartPtTOP19001")
 
     # Put all of the start pts into dictionaries
     all_start_pts = {}
@@ -784,9 +790,17 @@ def main_for_rwgt_validaiton():
     startPtScanV2 = put_all_fits_from_a_dir_into_dict("fit_coeffs/start_pt_checks/all22WCsStartPtCheckV2")
     startPtBase = put_all_fits_from_a_dir_into_dict("fit_coeffs/start_pt_checks/all22WCsBaselineStartPtTOP19001")
 
+
     # Evaluate the fits at starting points for each sample
     for p in p_lst:
         print "\n",p,"\n"
+
+        # Get fit and orig weight for pt based on TOP-19-001 start
+        fit_19001base = startPtBase[p+"_0"]
+        sname_19001base = reconstruct_sample_name(p,"all22WCsBaselineStartPtTOP19001dim6TopMay20GST","run0")
+        orig_wgt_19001base = orig_wgts_19001base[sname_19001base]["xsecAtStartScaleToSM"]
+
+        # Loop over the 7 new start pts
         for run in run_lst:
             print run
             # Check all22WCsStartPtCheckV2dim6TopMay20GST samples
@@ -795,31 +809,20 @@ def main_for_rwgt_validaiton():
             for tag,fit in startPtScanV2.iteritems():
                 if p not in tag: continue
                 rwgt_wgt = eval_fit(fit,all_start_pts[run][PROC_NAMES_SHORT[p]])
-                print "\t{tag}: orig wgt, rwgt wgt: {orig_wgt} {rwgt_wgt} -> {pdiff}".format(tag=tag,orig_wgt=orig_wgt,rwgt_wgt=rwgt_wgt,pdiff=get_pdiff(rwgt_wgt,orig_wgt))
-
+                print_fit_eval_info(tag,orig_wgt,rwgt_wgt)
             # Check all22WCsBaselineStartPtTOP19001dim6TopMay20GST samples
-            sname_19001base = reconstruct_sample_name(p,"all22WCsBaselineStartPtTOP19001dim6TopMay20GST","run0")
-            fit_19001base = startPtBase[p+"_0"]
             rwgt_wgt_19001base = eval_fit(fit_19001base,all_start_pts[run][PROC_NAMES_SHORT[p]])
-            print "\t{tag}: orig wgt, rwgt wgt: {orig_wgt} {rwgt_wgt} -> {pdiff}".format(tag=p+" base",orig_wgt=orig_wgt,rwgt_wgt=rwgt_wgt_19001base,pdiff=get_pdiff(rwgt_wgt_19001base,orig_wgt))
+            print_fit_eval_info(p+" base",orig_wgt,rwgt_wgt_19001base)
 
-        # Also inclut the point based on TOP-19-001 start pt
+        # Also include  the start pt based on TOP-19-001 start pt
         print "top19001base"
-        sname_19001base = reconstruct_sample_name(p,"all22WCsBaselineStartPtTOP19001dim6TopMay20GST","run0")
-        orig_wgt_19001base = orig_wgts[sname_19001base]
         for tag,fit in startPtScanV2.iteritems():
             if p not in tag: continue
             rwgt_wgt = eval_fit(fit,pt_top19001base[PROC_NAMES_SHORT[p]])
-            print "\t{tag}: orig wgt, rwgt wgt: {orig_wgt} {rwgt_wgt} -> {pdiff}".format(tag=tag,orig_wgt=orig_wgt_19001base,rwgt_wgt=rwgt_wgt,pdiff=get_pdiff(rwgt_wgt,orig_wgt_19001base))
-        fit_19001base = startPtBase[p+"_0"]
+            print_fit_eval_info(tag,orig_wgt_19001base,rwgt_wgt)
         rwgt_wgt_19001base = eval_fit(fit_19001base,pt_top19001base[PROC_NAMES_SHORT[p]])
-        print "\t{tag}: orig wgt, rwgt wgt: {orig_wgt} {rwgt_wgt} -> {pdiff}".format(tag=p+" base",orig_wgt=orig_wgt_19001base,rwgt_wgt=rwgt_wgt_19001base,pdiff=get_pdiff(rwgt_wgt_19001base,orig_wgt_19001base))
+        print_fit_eval_info(p+" base",orig_wgt_19001base,rwgt_wgt_19001base)
 
-    #j = open_json("fit_coeffs/start_pt_checks/sample_info/","test")
-    #for sample,info in j.iteritems():
-        #if "timestamp" in sample: continue
-        #orig_wgt = info["xsecAtStartScaleToSM"]
-        #print orig_wgt
 
 # Run one of the main functions
 #main_for_dim6SQ_checks()
