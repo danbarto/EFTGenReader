@@ -2,6 +2,7 @@
 # This code reads output tress produced by EFTLHEReader.cc and groups them by process+coeff, then processes them in runGridpackValidation.C
 
 import subprocess
+import datetime
 import os
 from utils import regex_match, getInfoByTag, getDirectories, groupByProcess, groupByCoefficient
 
@@ -521,8 +522,8 @@ ALL_INFO = [
         'tag': 'ttHJet-ttlnuJet-tllq-tHq_dim6TopMay20GST_all22WCsBaselineStartPtTOP19001_UL17-GEN',
         'grp_name': '',
         'version': 'v1',
-        'include': True,
-        #'include': False,
+        #'include': True,
+        'include': False,
         'p_wl': [],
         'c_wl': [],
         'r_wl': [],
@@ -532,8 +533,54 @@ ALL_INFO = [
         'tag': 'ttllJet-ttbarJet_dim6TopMay20GST_all22WCsBaselineStartPtTOP19001_GEN_UL17-GEN',
         'grp_name': '',
         'version': 'v1',
-        'include': True,
-        #'include': False,
+        #'include': True,
+        'include': False,
+        'p_wl': [],
+        'c_wl': [],
+        'r_wl': [],
+        'basepath' : "/hadoop/store/user/kmohrman/summaryTree_LHE/FullR2Studies/ValidationChecks/",
+    },
+    { # (UL17) dim6=0 for a SM reference
+        'tag': 'ttXJet-tXq-ttbarJet_dim6TopMay20GST_all22WCsDim6Eq0_GEN_UL17-GEN',
+        'grp_name': '',
+        'version': 'v1',
+        #'include': True,
+        'include': False,
+        'p_wl': [],
+        'c_wl': [],
+        'r_wl': [],
+        'basepath' : "/hadoop/store/user/kmohrman/summaryTree_LHE/FullR2Studies/ValidationChecks/",
+    },
+    { # (UL17) ttHJet, ttlnuJet, ttbarJet, tllq, tHq: 22d samples at 7 different starting points
+        'tag': 'ttHJet-ttlnuJet-ttbarJet-tllq-tHq_dim6TopMay20GST_all22WCsStartPtCheckV2_GEN_UL17-GEN',
+        'grp_name': '',
+        'version': 'v1',
+        #'include': True,
+        'include': False,
+        'p_wl': [],
+        'c_wl': [],
+        'r_wl': ["run0","run1"],
+        'basepath' : "/hadoop/store/user/kmohrman/summaryTree_LHE/FullR2Studies/ValidationChecks/",
+    },
+    { # (UL17) ttHJet, ttlnuJet, ttbarJet, tllq, tHq: 22d samples at 7 different starting points
+        'tag': 'ttHJet-ttlnuJet-ttllJet-ttbarJet-tllq-tHq_dim6TopMay20GST_all22WCsStartPtCheck_GEN_UL17-GEN',
+        'grp_name': '',
+        'version': 'v1',
+        #'include': True,
+        'include': False,
+        'p_wl': [],
+        'c_wl': [],
+        'r_wl': [],
+        'basepath' : "/hadoop/store/user/kmohrman/summaryTree_LHE/FullR2Studies/ValidationChecks/",
+    },
+
+    # Axis scans #
+    { # (UL17) ttbar axis scan
+        'tag': 'ttbarJet_dim6TopMay20GST_1dAxisScans-2heavy-2heavy2light_GENUL17-GEN',
+        'grp_name': '',
+        'version': 'v1',
+        #'include': True,
+        'include': False,
         'p_wl': [],
         'c_wl': [],
         'r_wl': [],
@@ -605,7 +652,7 @@ REF_PROCESS_MAP = {
 HADOOP_BASE_PATH = "/hadoop/store/user/kmohrman/summaryTree_LHE/2019_08_14_addPtBranches/"
 #HADOOP_BASE_PATH = "/hadoop/store/user/kmohrman/summaryTree_LHE/2020_03_03_addPSweights/"
 
-def runByProcess():
+def runByProcess(save_info_dir_path):
 
     cleanName = True
     #NOTE: The output name could be duplicated and overwrite a previous run
@@ -693,7 +740,8 @@ def runByProcess():
 
         print ""
         print "[%d/%d] %s (dirs %d, ref %d):" % (count+1,len(all_grouped_file_dirs_dict.keys()),output_name.ljust(spacing),len(fdirs),len(ref_dirs))
-        subprocess.check_call(['root','-b','-l','-q','runGridpackValidation.C+(\"%s\",\"%s\",\"%s\")' % (output_name,dir_inputs,ref_inputs)])
+        #subprocess.check_call(['root','-b','-l','-q','runGridpackValidation.C+(\"%s\",\"%s\",\"%s\")' % (output_name,dir_inputs,ref_inputs)])
+        subprocess.check_call(['root','-b','-l','-q','runGridpackValidation.C+(\"%s\",\"%s\",\"%s\",\"%s\")' % (output_name,save_info_dir_path,dir_inputs,ref_inputs)])
         count += 1
 
 def runByCoeff(tags,runs):
@@ -718,4 +766,31 @@ def runByCoeff(tags,runs):
         subprocess.check_call(['root','-b','-l','-q','runLayeredPlots.C+(\"%s\")' % (dir_inputs)])
     return
 
-runByProcess()
+# This function is very bad, we really should just write to the json automatically (not by hand).
+# But I don't know how to do that from c++, so doing it manually in runGridpackValidation.C, so have to set it up manually here too.
+def make_output_file_for_fit_info(save_file,action=None):
+    timestamp_tag = datetime.datetime.now().strftime('%Y%m%d_%H%M')
+    if action == "Begin":
+        if os.path.isfile(save_file):
+            print "\nERROR: File for saving fit info already exists: {f}. Exiting.\n".format(f=save_file)
+            raise Exception
+        with open (save_file,"w") as f:
+            f.write("{\n")
+            f.write("\t\"timestamp_start\" : \"{t}\",\n".format(t=timestamp_tag))
+    elif action == "End":
+        with open (save_file,"a") as f:
+            f.write("\t\"timestamp_end\" : \"{t}\"\n".format(t=timestamp_tag))
+            f.write("}")
+    else:
+        print "\nERROR: Unknown option {o}. Exiting.\n".format(o=action)
+
+save_dir = "fit_coeffs/start_pt_checks/sample_info/"
+#save_name = "fit_info_dim6eq0.json"
+save_name = "fit_info_top19001_samples.json"
+#save_name = "fit_info_all22WCsBaselineStartPtTOP19001.json"
+#save_name = "fit_info_all22WCsStartPtCheck.json"
+save_file = os.path.join(save_dir,save_name)
+
+make_output_file_for_fit_info(save_file,"Begin")
+runByProcess(save_file)
+make_output_file_for_fit_info(save_file,"End")

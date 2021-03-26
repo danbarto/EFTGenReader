@@ -215,7 +215,7 @@ void print_xsec(WCFit wcfit){
 
 }
 
-void runit(TString output_name,TString input_rundirs_spec,TString ref_rundirs_spec,TString grp_name="") {
+void runit(TString output_name,TString save_info_dir_path, TString input_rundirs_spec,TString ref_rundirs_spec,TString grp_name="") {
     int run_idx = 0;
 
     ////////////////// Setting up the infor for the points from Reza //////////////////
@@ -367,6 +367,7 @@ void runit(TString output_name,TString input_rundirs_spec,TString ref_rundirs_sp
     //xsec_plt_ops_1d.setXLimits(0.0,0.0); // Why? Why here? Let's not
     //xsec_plt_ops_1d.setYLimits(0.0,1.3); // Same comment
 
+
     std::vector<TString> all_dirs,tar_dirs,ref_dirs;
     TString fdir;
     std::ifstream input_filenames(input_rundirs_spec);
@@ -424,7 +425,7 @@ void runit(TString output_name,TString input_rundirs_spec,TString ref_rundirs_sp
             //last_entry = 90000;
         }
         //last_entry = 100000; // For testing
-        last_entry = 100; // For testing
+        //last_entry = 100; // For testing
         std::cout << "Last_entry: " << last_entry << std::endl;
 
         // ScaleByLSs
@@ -595,6 +596,21 @@ void runit(TString output_name,TString input_rundirs_spec,TString ref_rundirs_sp
             std::cout << "p, n, frac n:              " << p_counts << " , " << n_counts << " -> " << n_counts/(n_counts+p_counts) << std::endl;
             std::cout << "\n" << std::endl;
 
+            // Save some of the useful info to a file for future reference
+            // There MUST be a better way to do this. Why is there not an easy way to write to a json from c++? Maybe there is and I just don't know of it.
+            ofstream myfile;
+            myfile.open (save_info_dir_path,std::ios_base::app);
+            myfile << "\t\"" << run_dir << "\" : {\n";
+            myfile << "\t\t\"originalXWGTUP\" : "       << originalXWGTUP_intree_val  << ",\n";
+            myfile << "\t\t\"fitEvalAtSM\" : "          << SM_xsec_incl               << ",\n";
+            myfile << "\t\t\"xsecAtStartScaleToSM\" : " << start_pt_xsec/SM_xsec_incl << ",\n";
+            myfile << "\t\t\"nevents\" : "              << tot_events                 << ",\n";
+            myfile << "\t\t\"uniqueRuns\" : "           << unique_runs.size()         << ",\n";
+            myfile << "\t\t\"neventsNegitive\" : "      << n_counts                   << ",\n";
+            myfile << "\t\t\"neventsPositive\" : "      << p_counts                   << "\n";
+            myfile << "\t},\n";
+            myfile.close();
+
             // This will set up the names in the legend
             //TString comp_type = "0p1pComp"; // ResultsSec
             TString comp_type = "tag";
@@ -690,6 +706,7 @@ void runit(TString output_name,TString input_rundirs_spec,TString ref_rundirs_sp
         std::cout << std::endl;
         run_idx++;
     }
+
 
     ///*
     // TestPrint
@@ -891,8 +908,8 @@ void runit(TString output_name,TString input_rundirs_spec,TString ref_rundirs_sp
     std::cout << "Finished!" << std::endl;
 }
 
-void runGridpackValidation(TString output_name,TString input_rundirs_spec,TString ref_rundirs_spec,TString grp_name="") {
+void runGridpackValidation(TString output_name,TString save_info_dir_path, TString input_rundirs_spec,TString ref_rundirs_spec,TString grp_name="") {
     gStyle->SetOptStat(0);
 
-    runit(output_name,input_rundirs_spec,ref_rundirs_spec,grp_name);
+    runit(output_name,save_info_dir_path,input_rundirs_spec,ref_rundirs_spec,grp_name);
 }
