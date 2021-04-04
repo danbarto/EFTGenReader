@@ -36,6 +36,25 @@ const std::string kOrig      = "original";
 const std::string kOutputDir = "read_lhe_outputs";
 const std::string kFitCoeffSaveDir = "fit_coeffs";
 
+// Checks if a string has a WC name in it
+std::string findWCName(TString str){
+    std::vector<std::string> list_of_WC = {"ctp","cpQM","ctW","ctZ","ctG","cbW","cpQ3","cptb","cpt","cQl3i","cQlMi","cQei","ctli","ctei","ctlSi","ctlTi", "cQq13", "cQq83", "cQq11", "ctq1" , "cQq81", "ctq8" };
+    std::string return_wc = "NONE";
+    for (auto wc: list_of_WC) {
+        if (wc == "cpt"){
+            if (has_substr(str,wc) and not has_substr(str,"cptb")){ // There is probably a better way to do this...
+                return_wc = wc;
+            }
+        }
+        else {
+            if (has_substr(str,wc)){
+                return_wc = wc;
+            }
+        }
+    }
+    return return_wc;
+}
+
 // Checks a string to see if it has UL16, UL16APV, UL17, or UL18 in it or returns an empty string
 TString findULYear(TString str){
     TString r = "";
@@ -218,6 +237,12 @@ void print_xsec(WCFit wcfit){
 void runit(TString output_name,TString save_info_dir_path, TString input_rundirs_spec,TString ref_rundirs_spec,TString grp_name="") {
     int run_idx = 0;
 
+    // SET UP WHAT KIND OF NORMALIZATION TO USE //
+    TString norm;
+    norm = "scaleByLSs";
+    //norm = "scaleBySM";
+    //////////////////////////////////////////////
+
     ////////////////// Setting up the infor for the points from Reza //////////////////
     std::vector<customPointInfo> ttH_ctG_RezaPointsSMEFT;
     std::vector<customPointInfo> ttH_ctp_RezaPointsSMEFT;
@@ -357,6 +382,64 @@ void runit(TString output_name,TString save_info_dir_path, TString input_rundirs
     //ptsMap["ttH"]["_nlo"] = { {-5,} , {0,sm_ttH_nlo} , {5,} };
     ///////////////////////////////////////////////////////////////////////////////
 
+    // Hard coded map for figuring out how many LSs to run over for the matched samples
+    std::map<std::string,double> match_factor_map {
+        {"ttHJet"                  , 3.0},
+        {"ttlnuJet"                , 2.5},
+        {"ttllNuNuJetNoHiggs"      , 3.7},
+        {"ttbarJet"                , 4.1},
+        {"tllq4fNoSchanWNoHiggs0p" , 1.0},
+        {"tHq4f"                   , 1.0},
+    };
+
+    // Hard coded map for ttbarJet start point checks
+    std::map<std::string,std::map<std::string,double>> startMap;
+    startMap["cbW"]   ["run0"] = -3.0;
+    startMap["cbW"]   ["run1"] = 0.0;
+    startMap["cbW"]   ["run2"] = 3.0;
+    startMap["cpQ3"]  ["run0"] = -5.0;
+    startMap["cpQ3"]  ["run1"] = 0.0;
+    startMap["cpQ3"]  ["run2"] = 5.0;
+    startMap["cpQM"]  ["run0"] = -2.9;
+    startMap["cpQM"]  ["run1"] = 0.0;
+    startMap["cpQM"]  ["run2"] = 2.9;
+    startMap["cptb"]  ["run0"] = -25.0;
+    startMap["cptb"]  ["run1"] = 0.0;
+    startMap["cptb"]  ["run2"] = 25.0;
+    startMap["cpt"]   ["run0"] = -12.0;
+    startMap["cpt"]   ["run1"] = 0.0;
+    startMap["cpt"]   ["run2"] = 12.0;
+    startMap["cQq11"] ["run0"] = -6.5;
+    startMap["cQq11"] ["run1"] = 0.0;
+    startMap["cQq11"] ["run2"] = 6.5;
+    startMap["cQq13"] ["run0"] = -1.0;
+    startMap["cQq13"] ["run1"] = 0.0;
+    startMap["cQq13"] ["run2"] = 1.0;
+    startMap["cQq81"] ["run0"] = -4.5;
+    startMap["cQq81"] ["run1"] = 0.0;
+    startMap["cQq81"] ["run2"] = 4.5;
+    startMap["cQq83"] ["run0"] = -1.2;
+    startMap["cQq83"] ["run1"] = 0.0;
+    startMap["cQq83"] ["run2"] = 1.2;
+    startMap["ctG"]   ["run0"] = -0.3;
+    startMap["ctG"]   ["run1"] = 0.0;
+    startMap["ctG"]   ["run2"] = 0.3;
+    startMap["ctp"]   ["run0"] = -50.0;
+    startMap["ctp"]   ["run1"] = 0.0;
+    startMap["ctp"]   ["run2"] = 50.0;
+    startMap["ctq1"]  ["run0"] = -5.0;
+    startMap["ctq1"]  ["run1"] = 0.0;
+    startMap["ctq1"]  ["run2"] = 5.0;
+    startMap["ctq8"]  ["run0"] = -3.5;
+    startMap["ctq8"]  ["run1"] = 0.0;
+    startMap["ctq8"]  ["run2"] = 3.5;
+    startMap["ctW"]   ["run0"] = -1.7;
+    startMap["ctW"]   ["run1"] = 0.0;
+    startMap["ctW"]   ["run2"] = 1.7;
+    startMap["ctZ"]   ["run0"] = -3.5;
+    startMap["ctZ"]   ["run1"] = 0.0;
+    startMap["ctZ"]   ["run2"] = 3.5;
+
 
     WCPoint sm_pt("smpt");
 
@@ -382,12 +465,13 @@ void runit(TString output_name,TString save_info_dir_path, TString input_rundirs
         if (!hasElement(all_dirs,fdir)) all_dirs.push_back(fdir);
     }
     ref_filenames.close();
-    int tot_events = 0;
     for (uint line_idx = 0; line_idx < all_dirs.size(); line_idx++) {
         fdir = all_dirs.at(line_idx);  // fdir will be a path to a hadoop directory with root files for a particluar run
         std::string run_dir = getRunDirectory(fdir.Data());
         std::cout << "[" << (line_idx+1) << "/" << all_dirs.size() << "] Full Path: " << fdir << std::endl;
         //std::cout << "\tRun Dir: " << run_dir << std::endl;
+
+        int tot_events = 0;
 
         bool is_tar = hasElement(tar_dirs,fdir);
         bool is_ref = hasElement(ref_dirs,fdir);
@@ -416,24 +500,33 @@ void runit(TString output_name,TString save_info_dir_path, TString input_rundirs
         std::string grp_tag   = words.at(2);
         std::string run_label = words.at(3);
 
+        // Specify how many events to run over
+
         int chain_entries = chain.GetEntries();
         int last_entry = chain_entries;
-        if (chain_entries > 100000) { // 100k takes about 10min
-        //if (chain_entries > 90000) { // 100k takes about 10min
-            std::cout << "Chain_entries: " << chain_entries << std::endl;
-            last_entry = 100000;
-            //last_entry = 90000;
+        if (norm == "scaleBySM") {
+            if (chain_entries > 100000) {
+                std::cout << "Chain_entries: " << chain_entries << std::endl;
+                last_entry = 100000; // We only break here if we are scaling by SM
+            }
+            //last_entry = 100; // For testing
         }
-        //last_entry = 100000; // For testing
-        //last_entry = 100; // For testing
-        std::cout << "Last_entry: " << last_entry << std::endl;
 
-        // ScaleByLSs
-        int num_LS = 101;
+        double matching_factor = match_factor_map[process];
+        //int num_LS = 150*matching_factor; // We only break here if we are scaling by LS
+        int num_LS = 500;
+        //if (num_LS*500 > chain_entries){
+            //std::cout << "num_LS requested: " << num_LS << " , tot events: " << chain_entries << std::endl;
+            //throw std::runtime_error("Cannot loop over this many LSs, not enough events");
+        //}
+        //int num_LS = 10;
         std::set<int> unique_runs;
 
-        int first_entry = 0;
+        // Print info about how many events we are processing
+        std::cout << "Last_entry: " << last_entry << ", Last LS: " << num_LS << ", norm type: " << norm << std::endl;
 
+
+        int first_entry = 0;
         WCFit* wcFit_intree = 0;
         double originalXWGTUP_intree = -1.;
         int lumiBlock_intree;
@@ -464,7 +557,9 @@ void runit(TString output_name,TString save_info_dir_path, TString input_rundirs
         chain.SetBranchAddress("genJet_pt4",&genJet_pt4_intree);
 
         //////////////////////////////////
+
         // For 1d plots, very hardcoded //
+        /*
         // Set up the wc point string (depends a lot on the naming scheme)
         std::map<string,string> ref_pts_dict;
         //std::string wcname = "ctG";
@@ -482,6 +577,14 @@ void runit(TString output_name,TString save_info_dir_path, TString input_rundirs
         std::cout << "Run label: " << run_label << " , Dictionary entry: " << ref_pts_dict[run_label] << std::endl;
         std::string pt_str = ref_pts_dict[run_label];
         WCPoint ref_fit_pt = WCPoint(pt_str);
+        */
+
+        std::string wc_name = findWCName(grp_tag);
+        double wc_val = startMap[wc_name][run_label];
+        std::string pt_str = "wcpt_"+wc_name+"_"+std::to_string(wc_val);
+        std::cout << "Run label: " << run_label << " , Pt str: " << pt_str << std::endl;
+        WCPoint ref_fit_pt = WCPoint(pt_str);
+
         //////////////////////////////////
 
         double start_pt_xsec=0;
@@ -503,13 +606,21 @@ void runit(TString output_name,TString save_info_dir_path, TString input_rundirs
             chain.GetEntry(i);
             sw.lap("Get Entry");
 
-            /*
             // ScaleByLSs: For running over a specific number of LSs, so that we can scale by the factor to get correct cross section. Usually used if not normalizing to SM.  //
+            //std::cout << lumiBlock_intree << std::endl;
+            int unique_runs_last = unique_runs.size();
             unique_runs.insert(lumiBlock_intree);
-            if (unique_runs.size()+1 > num_LS) {
-                break;
+            if (unique_runs.size() > unique_runs_last){
+                //std::cout << "Entering a new LS!!!" << "last: " << unique_runs_last << " now: " << unique_runs.size() << " LS: " << lumiBlock_intree << std::endl;
+                //std::cout << "wgt: " << originalXWGTUP_intree_val << std::endl;
+                //std::cout << originalXWGTUP_intree_val << std::endl;
             }
-            */
+            if (norm == "scaleByLSs") {
+                //if (unique_runs.size()+1 > num_LS) {
+                if (unique_runs.size() > num_LS) {
+                    break;
+                }
+            }
 
             /*
             // ResidCheck: This was for checking the fit residuals to understand how precise the fit coeffs are //
@@ -550,14 +661,17 @@ void runit(TString output_name,TString save_info_dir_path, TString input_rundirs
 
         // Normalize to SM
         double SM_xsec_incl = inclusive_fit.evalPoint(&sm_pt);
-        inclusive_fit.scale(1.0/SM_xsec_incl); // TODO: Comment if not scaling to SM (e.g. for ScaleByLSs)
-        /*
+        if (norm == "scaleBySM") {
+            inclusive_fit.scale(1.0/SM_xsec_incl);
+        }
         // ScaleByLSs
-        inclusive_fit.scale(1.0/unique_runs.size());
-        //inclusive_fit.scale(1.0/500.0); // To account for avg instead of sum weight
-        std::cout << "\n\nScale by LSs: unique runs " << unique_runs.size() << "\n\n" << std::endl;
-        */
+        if (norm == "scaleByLSs") {
+            inclusive_fit.scale(1.0/num_LS);
+            //inclusive_fit.scale(1.0/500.0); // To account for avg instead of sum weight
+            std::cout << "\n\nScale by LSs: " << num_LS << "\n\n" << std::endl;
+        }
 
+        /*
         // Dump the 1d fit functions to the screen
         std::vector<std::string> list_of_WC = {"ctp","cpQM","ctW","ctZ","ctG","cbW","cpQ3","cptb","cpt","cQl3i","cQlMi","cQei","ctli","ctei","ctlSi","ctlTi", "cQq13", "cQq83", "cQq11", "ctq1" , "cQq81", "ctq8" };
         std::cout << " " << std:: endl;
@@ -565,6 +679,7 @@ void runit(TString output_name,TString save_info_dir_path, TString input_rundirs
             inclusive_fit.dump(false,276,WC);
             std::cout << " " << std:: endl;
         }
+        */
         
         // Normalize ref pt and add to list
         std::cout << "Is ref? " << is_ref << std::endl;
@@ -586,14 +701,16 @@ void runit(TString output_name,TString save_info_dir_path, TString input_rundirs
 
             // Print orig weight
             std::cout << "\n" << grp_tag << run_label << std::endl;
-            std::cout << "Unique run size:           " << unique_runs.size() << std::endl;
-            std::cout << "Start pt wgt over SM:      " << originalXWGTUP_intree/SM_xsec_incl << std::endl;
-            std::cout << "Weight at SM:              " << SM_xsec_incl << std::endl;
-            std::cout << "Start pt wgt sum:          " << start_pt_xsec << std::endl;
-            std::cout << "Start pt wgt sum over LSs: " << start_pt_xsec/unique_runs.size() << std::endl;
-            std::cout << "Start pt wgt sum over SM:  " << start_pt_xsec/SM_xsec_incl << std::endl;
-            std::cout << "originalXWGTUP_intree_val: " << originalXWGTUP_intree_val << std::endl;
-            std::cout << "p, n, frac n:              " << p_counts << " , " << n_counts << " -> " << n_counts/(n_counts+p_counts) << std::endl;
+            std::cout << "originalXWGTUP:         " << originalXWGTUP_intree_val        << std::endl;
+            std::cout << "fitEvalAtSM:            " << SM_xsec_incl                     << std::endl;
+            std::cout << "xsecAtStart:            " << start_pt_xsec                    << ",\n";
+            std::cout << "xsecAtStartScaleToSM:   " << start_pt_xsec/SM_xsec_incl       << std::endl;
+            std::cout << "fitEvalAtSMScaleToLSs:  " << SM_xsec_incl/num_LS              << std::endl;
+            std::cout << "xsecAtStartScaleToLSs:  " << start_pt_xsec/num_LS             << std::endl;
+            std::cout << "Start pt wgt sum:       " << start_pt_xsec                    << std::endl;
+            std::cout << "Num LSs:                " << num_LS                           << std::endl;
+            std::cout << "Unique run size:        " << unique_runs.size()               << std::endl;
+            std::cout << "p, n, frac n:           " << p_counts << " , " << n_counts << " -> " << n_counts/(n_counts+p_counts) << std::endl;
             std::cout << "\n" << std::endl;
 
             // Save some of the useful info to a file for future reference
@@ -601,13 +718,16 @@ void runit(TString output_name,TString save_info_dir_path, TString input_rundirs
             ofstream myfile;
             myfile.open (save_info_dir_path,std::ios_base::app);
             myfile << "\t\"" << run_dir << "\" : {\n";
-            myfile << "\t\t\"originalXWGTUP\" : "       << originalXWGTUP_intree_val  << ",\n";
-            myfile << "\t\t\"fitEvalAtSM\" : "          << SM_xsec_incl               << ",\n";
-            myfile << "\t\t\"xsecAtStartScaleToSM\" : " << start_pt_xsec/SM_xsec_incl << ",\n";
-            myfile << "\t\t\"nevents\" : "              << tot_events                 << ",\n";
-            myfile << "\t\t\"uniqueRuns\" : "           << unique_runs.size()         << ",\n";
-            myfile << "\t\t\"neventsNegitive\" : "      << n_counts                   << ",\n";
-            myfile << "\t\t\"neventsPositive\" : "      << p_counts                   << "\n";
+            myfile << "\t\t\"originalXWGTUP\" : "        << originalXWGTUP_intree_val  << ",\n";
+            myfile << "\t\t\"fitEvalAtSM\" : "           << SM_xsec_incl               << ",\n";
+            myfile << "\t\t\"xsecAtStart\" : "           << start_pt_xsec              << ",\n";
+            myfile << "\t\t\"xsecAtStartScaleToSM\" : "  << start_pt_xsec/SM_xsec_incl << ",\n";
+            myfile << "\t\t\"fitEvalAtSMScaleToLSs\" : " << SM_xsec_incl/num_LS        << ",\n";
+            myfile << "\t\t\"xsecAtStartScaleToLSs\" : " << start_pt_xsec/num_LS       << ",\n";
+            myfile << "\t\t\"nevents\" : "               << tot_events                 << ",\n";
+            myfile << "\t\t\"nLSs\" : "                  << num_LS                     << ",\n";
+            myfile << "\t\t\"neventsNegitive\" : "       << n_counts                   << ",\n";
+            myfile << "\t\t\"neventsPositive\" : "       << p_counts                   << "\n";
             myfile << "\t},\n";
             myfile.close();
 

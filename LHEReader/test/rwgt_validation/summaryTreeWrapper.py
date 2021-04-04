@@ -555,14 +555,14 @@ ALL_INFO = [
         'tag': 'ttHJet-ttlnuJet-ttbarJet-tllq-tHq_dim6TopMay20GST_all22WCsStartPtCheckV2_GEN_UL17-GEN',
         'grp_name': '',
         'version': 'v1',
-        #'include': True,
-        'include': False,
+        'include': True,
+        #'include': False,
         'p_wl': [],
         'c_wl': [],
-        'r_wl': ["run0","run1"],
+        'r_wl': [],
         'basepath' : "/hadoop/store/user/kmohrman/summaryTree_LHE/FullR2Studies/ValidationChecks/",
     },
-    { # (UL17) ttHJet, ttlnuJet, ttbarJet, tllq, tHq: 22d samples at 7 different starting points
+    { # (UL17) ttHJet, ttlnuJet, ttllJet, ttbarJet, tllq, tHq: 22d samples at 7 different starting points
         'tag': 'ttHJet-ttlnuJet-ttllJet-ttbarJet-tllq-tHq_dim6TopMay20GST_all22WCsStartPtCheck_GEN_UL17-GEN',
         'grp_name': '',
         'version': 'v1',
@@ -634,6 +634,7 @@ REF_TAGS = [
     #'ttHJet_HanV4ctGAxisScan_analysisEtaCut-GEN'
     #'ttHJet_HanV4_cbW-AxisScan-withRwgt_smeftComp_QED1_QCD2_DIM62-GEN' # Note, the proc name is ttHJetSMEFTcomp, might need to take care of this in REF_PROCESS_MAP
     #'ttHJet_testGenprodVersions-dim6TopMat20GST-1dScans-cpt-cptb-GEN'
+    #'ttbarJet_dim6TopMay20GST_1dAxisScans-2heavy-2heavy2light_GENUL17-GEN'
 ]
 
 # Dictionary to map certain MG processes to another for use in finding reference samples
@@ -784,11 +785,18 @@ def make_output_file_for_fit_info(save_file,action=None):
     else:
         print "\nERROR: Unknown option {o}. Exiting.\n".format(o=action)
 
-save_dir = "fit_coeffs/start_pt_checks/sample_info/"
+timestamp_tag = datetime.datetime.now().strftime('%Y%m%d_%H%M')
+
+save_dir = "testing"
+save_name = str(timestamp_tag)+".txt"
+
+#save_dir = "fit_coeffs/start_pt_checks/sample_info/"
 #save_name = "fit_info_dim6eq0.json"
-save_name = "fit_info_top19001_samples.json"
+#save_name = "fit_info_top19001_samples.json"
 #save_name = "fit_info_all22WCsBaselineStartPtTOP19001.json"
 #save_name = "fit_info_all22WCsStartPtCheck.json"
+#save_name = "fit_info_all22WCsStartPtCheckV2.json"
+
 save_file = os.path.join(save_dir,save_name)
 
 make_output_file_for_fit_info(save_file,"Begin")
