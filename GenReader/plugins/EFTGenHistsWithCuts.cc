@@ -126,9 +126,25 @@ void EFTGenHistsWithCuts::beginJob()
     h_eventsumEFT = newfs->make<TH1EFT>("h_eventsumEFT","h_eventsumEFT",1,0,1);
 
     // Don't normalize these plots
-    h_SMwgt_norm = newfs->make<TH1D>("h_SMwgt_norm","h_SMwgt_norm",350,-0.1,2.0);
-    h_SMwgt_norm = newfs->make<TH1D>("h_SMwgt_norm","h_SMwgt_norm",350,-8,1); // Log x scale
-    binLogX(h_SMwgt_norm);
+    //h_SMwgt_norm = newfs->make<TH1D>("h_SMwgt_norm","h_SMwgt_norm",350,-8,2); // Log x scale
+    h_wgts_sm = newfs->make<TH1D>("h_wgts_sm","h_wgts_sm",350,-10,10); // Log x scale
+    h_wgts_top19001_hi     = newfs->make<TH1D>("h_wgts_top19001_hi","h_wgts_top19001_hi",350,-10,10); // Log x scale
+    h_wgts_top19001_lo     = newfs->make<TH1D>("h_wgts_top19001_lo","h_wgts_top19001_lo",350,-10,10); // Log x scale
+    h_wgts_ttHJet_30perc   = newfs->make<TH1D>("h_wgts_ttHJet_30perc","h_wgts_ttHJet_30perc",350,-10,10); // Log x scale
+    h_wgts_ttlnuJet_30perc = newfs->make<TH1D>("h_wgts_ttlnuJet_30perc","h_wgts_ttlnuJet_30perc",350,-10,10); // Log x scale
+    h_wgts_ttllJet_30perc  = newfs->make<TH1D>("h_wgts_ttllJet_30perc","h_wgts_ttllJet_30perc",350,-10,10); // Log x scale
+    h_wgts_tllq_30perc     = newfs->make<TH1D>("h_wgts_tllq_30perc","h_wgts_tllq_30perc",350,-10,10); // Log x scale
+    h_wgts_tHq_30perc      = newfs->make<TH1D>("h_wgts_tHq_30perc","h_wgts_tHq_30perc",350,-10,10); // Log x scale
+    h_wgts_sm_fromfit      = newfs->make<TH1D>("h_wgts_sm_fromfit","h_wgts_sm_fromfit",350,-10,10); // Log x scale
+    binLogX(h_wgts_sm);
+    binLogX(h_wgts_top19001_hi);
+    binLogX(h_wgts_top19001_lo);
+    binLogX(h_wgts_ttHJet_30perc);
+    binLogX(h_wgts_ttlnuJet_30perc);
+    binLogX(h_wgts_ttllJet_30perc);
+    binLogX(h_wgts_tllq_30perc);
+    binLogX(h_wgts_tHq_30perc);
+    binLogX(h_wgts_sm_fromfit);
 
     summaryTree = newfs->make<TTree>("summaryTree","Summary Event Values");
     tree_add_branches();
@@ -199,6 +215,27 @@ void EFTGenHistsWithCuts::analyze(const edm::Event& event, const edm::EventSetup
     pl_leptons = CleanCollection(pl_leptons,pl_jets,0.4); // Clean PL leptons (Should clean the PL leptons, not the PL jets: https://twiki.cern.ch/twiki/bin/view/LHCPhysics/ParticleLevelTopDefinitions)
 
 
+    // Note the TOP-19-001 hi and low limits strings have made up numbers for the 2heavy2light WCs (i.e. they are not 0)
+    std::string top19001_hi_str     = "rwgt_cQei_4.59_cQl3i_8.97_cQlMi_4.99_cQq11_-10.0_cQq13_-3.0_cQq81_17.0_cQq83_4.0_cbW_4.95_cpQ3_3.48_cpQM_21.65_cpt_12.31_cptb_12.63_ctG_1.18_ctW_2.87_ctZ_3.15_ctei_4.86_ctlSi_6.52_ctlTi_0.84_ctli_4.82_ctp_44.26_ctq1_10.0_ctq8_-13.0";
+    std::string top19001_lo_str     = "rwgt_cQei_-4.38_cQl3i_-9.67_cQlMi_-4.02_cQq11_23.0_cQq13_4.0_cQq81_-13.0_cQq83_6.0_cbW_-4.95_cpQ3_-7.37_cpQM_-7.59_cpt_-18.62_cptb_-12.72_ctG_-1.38_ctW_-3.08_ctZ_-3.32_ctei_-4.24_ctlSi_-6.52_ctlTi_-0.84_ctli_-4.29_ctp_-16.98_ctq1_-19.0_ctq8_10.0";
+    std::string ttHJet_30perc_str   = "rwgt_cQei_100.0_cQl3i_100.0_cQlMi_100.0_cQq11_-1.25_cQq13_1.21_cQq81_2.17_cQq83_2.82_cbW_12.71_cpQ3_10.29_cpQM_-19.97_cpt_22.64_cptb_28.63_ctG_0.24_ctW_1.81_ctZ_-2.23_ctei_100.0_ctlSi_100.0_ctlTi_100.0_ctli_100.0_ctp_-2.29_ctq1_1.24_ctq8_2.03";
+    std::string ttlnuJet_30perc_str = "rwgt_cQei_100.0_cQl3i_32.13_cQlMi_56.97_cQq11_-0.66_cQq13_0.44_cQq81_0.98_cQq83_-1.0_cbW_100.0_cpQ3_7.13_cpQM_-12.98_cpt_16.12_cptb_100.0_ctG_0.94_ctW_2.14_ctZ_-12.66_ctei_100.0_ctlSi_100.0_ctlTi_20.18_ctli_100.0_ctp_-89.0_ctq1_0.67_ctq8_0.89";
+    std::string ttllJet_30perc_str  = "rwgt_cQei_-12.81_cQl3i_6.51_cQlMi_-10.06_cQq11_-0.94_cQq13_0.92_cQq81_1.7_cQq83_-2.19_cbW_12.09_cpQ3_15.15_cpQM_-2.86_cpt_3.94_cptb_42.52_ctG_0.57_ctW_2.6_ctZ_1.64_ctei_-12.88_ctlSi_-17.55_ctlTi_2.46_ctli_-9.74_ctp_100.0_ctq1_1.13_ctq8_1.87";
+    std::string tllq_30perc_str     = "rwgt_cQei_-19.23_cQl3i_6.33_cQlMi_18.1_cQq11_100.0_cQq13_-0.21_cQq81_100.0_cQq83_0.6_cbW_2.06_cpQ3_1.21_cpQM_9.66_cpt_17.35_cptb_7.59_ctG_7.56_ctW_1.49_ctZ_-3.13_ctei_51.32_ctlSi_37.43_ctlTi_4.62_ctli_-42.34_ctp_100.0_ctq1_100.0_ctq8_100.0";
+    std::string tHq_30perc_str      = "rwgt_cQei_100.0_cQl3i_100.0_cQlMi_100.0_cQq11_100.0_cQq13_0.11_cQq81_100.0_cQq83_-0.36_cbW_0.53_cpQ3_1.23_cpQM_100.0_cpt_100.0_cptb_-2.4_ctG_-3.65_ctW_0.29_ctZ_100.0_ctei_100.0_ctlSi_100.0_ctlTi_100.0_ctli_100.0_ctp_-3.64_ctq1_100.0_ctq8_100.0";
+    std::string sm_pt_str           = "";
+
+
+    WCPoint* top19001_hi_pt     = new WCPoint(top19001_hi_str);
+    WCPoint* top19001_lo_pt     = new WCPoint(top19001_lo_str);
+    WCPoint* ttHJet_30perc_pt   = new WCPoint(ttHJet_30perc_str);
+    WCPoint* ttlnuJet_30perc_pt = new WCPoint(ttlnuJet_30perc_str);
+    WCPoint* ttllJet_30perc_pt  = new WCPoint(ttllJet_30perc_str);
+    WCPoint* tllq_30perc_pt     = new WCPoint(tllq_30perc_str);
+    WCPoint* tHq_30perc_pt      = new WCPoint(tHq_30perc_str);
+    WCPoint* sm_pt              = new WCPoint(sm_pt_str);
+
+
     // Get eft_fit
     originalXWGTUP_intree = LHEInfo->originalXWGTUP();  // original cross-section
     double sm_wgt = 0.;
@@ -226,9 +263,18 @@ void EFTGenHistsWithCuts::analyze(const edm::Event& event, const edm::EventSetup
     total_sm_xsec += sm_wgt;
     total_orig_xsec += originalXWGTUP_intree;
 
-    // Fill h_eventsumEFT and h_SMwgt_norm hists
+    // Fill h_eventsumEFT and wgt hists
     h_eventsumEFT->Fill(0.5,1,eft_fit);
-    h_SMwgt_norm->Fill(sm_wgt);
+    h_wgts_sm->Fill(sm_wgt);
+
+    h_wgts_top19001_hi->Fill(eft_fit.evalPoint(top19001_hi_pt));
+    h_wgts_top19001_lo->Fill(eft_fit.evalPoint(top19001_lo_pt));
+    h_wgts_ttHJet_30perc->Fill(eft_fit.evalPoint(ttHJet_30perc_pt));
+    h_wgts_ttlnuJet_30perc->Fill(eft_fit.evalPoint(ttlnuJet_30perc_pt));
+    h_wgts_ttllJet_30perc->Fill(eft_fit.evalPoint(ttllJet_30perc_pt));
+    h_wgts_tllq_30perc->Fill(eft_fit.evalPoint(tllq_30perc_pt));
+    h_wgts_tHq_30perc->Fill(eft_fit.evalPoint(tHq_30perc_pt));
+    h_wgts_sm_fromfit->Fill(eft_fit.evalPoint(sm_pt));
 
     // Find what analysis categories (if any) this even falls into
     TString ana_cat_name = GetAnaCat(pl_leptons,pl_jets,pl_bjets);

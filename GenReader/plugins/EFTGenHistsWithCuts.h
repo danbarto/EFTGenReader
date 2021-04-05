@@ -163,7 +163,15 @@ class EFTGenHistsWithCuts: public edm::EDAnalyzer
         edm::EDGetTokenT<std::vector<reco::GenJet>> particleLevelLeptonsToken_;
 
         // Histograms
-        TH1D* h_SMwgt_norm;
+        TH1D* h_wgts_sm;
+        TH1D* h_wgts_top19001_hi;
+        TH1D* h_wgts_top19001_lo;
+        TH1D* h_wgts_ttHJet_30perc;
+        TH1D* h_wgts_ttlnuJet_30perc;
+        TH1D* h_wgts_ttllJet_30perc;
+        TH1D* h_wgts_tllq_30perc;
+        TH1D* h_wgts_tHq_30perc;
+        TH1D* h_wgts_sm_fromfit;
         TH1EFT* h_eventsumEFT;
 
         // Particle level jets hists
