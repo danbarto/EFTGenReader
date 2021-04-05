@@ -19,15 +19,17 @@ input_path = "/store/user/"
 out_ver = "v1"
 #tag = 'ttX-ttXJet_HanV4_nJets3orMoreLep_lepPt10-jetPt30_lepEta-jetEta_genOnly'
 #tag = 'testing_nJets_plots_July27_2020/ttX_central_cutsComp-nJets_test_lepPt10-jetPt30_lepEta-jetEta'
-tag = 'FullR2Studies/ULChecks/ttHJet_startptchecks-dim6syntaxchecks_UL17'
-#tag = 'tllq4fNoSchanWNoHiggs0p_7p5mil_checks_ptEtaCuts'
+#tag = 'FullR2Studies/ULChecks/ttHJet_startptchecks-dim6syntaxchecks_UL17'
+#tag = 'FullR2Studies/ValidationChecks/ttXJet-tXq-ttbarJet_all22WCsStartPtChecks_UL17'
+tag = 'FullR2Studies/ValidationChecks/ttXJet-tXq-ttbarJet_all22WCsBaselineStartPtTOP19001_UL17'
 
 #master_label = 'EFT_LHE_{tstamp}'.format(tstamp=timestamp_tag)
-master_label = 'EFT_T3_{tstamp}'.format(tstamp=timestamp_tag)
+#master_label = 'EFT_T3_{tstamp}'.format(tstamp=timestamp_tag)
+master_label = 'EFT_CRC_{tstamp}'.format(tstamp=timestamp_tag)
 #master_label = 'EFT_other_T3_{tstamp}'.format(tstamp=timestamp_tag)
 
-RUN_MODE = 'testing'
-#RUN_MODE = 'mg_studies'
+#RUN_MODE = 'testing'
+RUN_MODE = 'mg_studies'
 
 #output_path = "/store/user/$USER/KinematicGenHists/{tag}/{ver}".format(tag=tag,ver=out_ver)
 if RUN_MODE == 'testing':
@@ -52,12 +54,12 @@ storage = StorageConfiguration(
 
 processing = Category(
     name='processing',
-    mode='fixed',
+    #mode='fixed',
     cores=1,
     memory=1200,
     #disk=1000
     #disk=2900
-    disk=4000
+    disk=6000
 )
 
 wf = []
@@ -82,7 +84,7 @@ samples = [
     #'ttHJet_HanV2Model-xqcut10qcut19',
     #'ttHJet_HanV2Model-xqcut10qcut25',
     #'ttHJet_HanV4Model-xqcut10qcut15',
-    'ttHJet_HanV4Model-xqcut10qcut19',
+    #'ttHJet_HanV4Model-xqcut10qcut19',
     #'ttHJet_HanV4Model-xqcut10qcut25',
     #'ttllNuNuJetNoHiggs_HanV4Model-xqcut10qcut15',
     #'ttllNuNuJetNoHiggs_HanV4Model-xqcut10qcut19',
@@ -161,6 +163,54 @@ samples = [
     #"ttHJet_dim6TopMay20GST_UL17_startPtChecks_DIM6EQ1_top19001-ttHJet-startpt", # Have not actually run this yet...
     #"ttHJet_dim6TopMay20GST_UL17_startPtChecks_DIM6EQ1_other-startpt", # Have not actually run this yet...
     #"ttHJet_dim6TopMay20GST_UL17_startPtChecks_DIM6EQ1_top19001hi-startpt", # Have not actually run this yet...
+    #"tllq4fNoSchanWNoHiggs0p_dim6TopMay20GST_all22WCsStartPtCheck_run6_UL17",
+    #"tllq4fNoSchanWNoHiggs0p_dim6TopMay20GST_all22WCsStartPtCheck_run5_UL17",
+    #"tllq4fNoSchanWNoHiggs0p_dim6TopMay20GST_all22WCsStartPtCheck_run4_UL17",
+    #"tllq4fNoSchanWNoHiggs0p_dim6TopMay20GST_all22WCsStartPtCheck_run3_UL17",
+    #"tllq4fNoSchanWNoHiggs0p_dim6TopMay20GST_all22WCsStartPtCheck_run2_UL17",
+    #"tllq4fNoSchanWNoHiggs0p_dim6TopMay20GST_all22WCsStartPtCheck_run1_UL17",
+    #"tllq4fNoSchanWNoHiggs0p_dim6TopMay20GST_all22WCsStartPtCheck_run0_UL17",
+    #"ttbarJet_dim6TopMay20GST_all22WCsStartPtCheck_run6_UL17",
+    #"ttbarJet_dim6TopMay20GST_all22WCsStartPtCheck_run5_UL17",
+    #"ttbarJet_dim6TopMay20GST_all22WCsStartPtCheck_run4_UL17",
+    #"ttbarJet_dim6TopMay20GST_all22WCsStartPtCheck_run3_UL17",
+    #"ttbarJet_dim6TopMay20GST_all22WCsStartPtCheck_run2_UL17",
+    #"ttbarJet_dim6TopMay20GST_all22WCsStartPtCheck_run1_UL17",
+    #"ttbarJet_dim6TopMay20GST_all22WCsStartPtCheck_run0_UL17",
+    #"ttHJet_dim6TopMay20GST_all22WCsStartPtCheck_run0_UL17",
+    #"ttHJet_dim6TopMay20GST_all22WCsStartPtCheck_run2_UL17",
+    #"ttHJet_dim6TopMay20GST_all22WCsStartPtCheck_run1_UL17",
+    #"ttHJet_dim6TopMay20GST_all22WCsStartPtCheck_run6_UL17",
+    #"ttHJet_dim6TopMay20GST_all22WCsStartPtCheck_run4_UL17",
+    #"ttHJet_dim6TopMay20GST_all22WCsStartPtCheck_run5_UL17",
+    #"ttHJet_dim6TopMay20GST_all22WCsStartPtCheck_run3_UL17",
+    #"ttlnuJet_dim6TopMay20GST_all22WCsStartPtCheck_run4_UL17",
+    #"ttlnuJet_dim6TopMay20GST_all22WCsStartPtCheck_run6_UL17",
+    #"ttlnuJet_dim6TopMay20GST_all22WCsStartPtCheck_run5_UL17",
+    #"ttlnuJet_dim6TopMay20GST_all22WCsStartPtCheck_run0_UL17",
+    #"ttlnuJet_dim6TopMay20GST_all22WCsStartPtCheck_run3_UL17",
+    #"ttlnuJet_dim6TopMay20GST_all22WCsStartPtCheck_run2_UL17",
+    #"ttlnuJet_dim6TopMay20GST_all22WCsStartPtCheck_run1_UL17",
+    #"ttllNuNuJetNoHiggs_dim6TopMay20GST_all22WCsStartPtCheck_run6_UL17",
+    #"ttllNuNuJetNoHiggs_dim6TopMay20GST_all22WCsStartPtCheck_run3_UL17",
+    #"ttllNuNuJetNoHiggs_dim6TopMay20GST_all22WCsStartPtCheck_run2_UL17",
+    #"ttllNuNuJetNoHiggs_dim6TopMay20GST_all22WCsStartPtCheck_run1_UL17",
+    #"ttllNuNuJetNoHiggs_dim6TopMay20GST_all22WCsStartPtCheck_run0_UL17",
+    #"ttllNuNuJetNoHiggs_dim6TopMay20GST_all22WCsStartPtCheck_run5_UL17",
+    #"ttllNuNuJetNoHiggs_dim6TopMay20GST_all22WCsStartPtCheck_run4_UL17",
+    #"tHq4f_dim6TopMay20GST_all22WCsStartPtCheck_run6_UL17",
+    #"tHq4f_dim6TopMay20GST_all22WCsStartPtCheck_run5_UL17",
+    #"tHq4f_dim6TopMay20GST_all22WCsStartPtCheck_run4_UL17",
+    #"tHq4f_dim6TopMay20GST_all22WCsStartPtCheck_run3_UL17",
+    #"tHq4f_dim6TopMay20GST_all22WCsStartPtCheck_run2_UL17",
+    #"tHq4f_dim6TopMay20GST_all22WCsStartPtCheck_run1_UL17",
+    #"tHq4f_dim6TopMay20GST_all22WCsStartPtCheck_run0_UL17",
+    "ttHJet_dim6TopMay20GST_all22WCsBaselineStartPtTOP19001_UL17",
+    "ttlnuJet_dim6TopMay20GST_all22WCsBaselineStartPtTOP19001_UL17",
+    "ttllNuNuJetNoHiggs_dim6TopMay20GST_all22WCsBaselineStartPtTOP19001_UL17",
+    "tllq4fNoSchanWNoHiggs0p_dim6TopMay20GST_all22WCsBaselineStartPtTOP19001_UL17",
+    "tHq4f_dim6TopMay20GST_all22WCsBaselineStartPtTOP19001_UL17",
+    "ttbarJet_dim6TopMay20GST_all22WCsBaselineStartPtTOP19001_UL17",
 ]
 
 das_mode = False
@@ -209,7 +259,8 @@ for idx,sample_name in enumerate(samples):
             patterns=["*.root"]
         )
         if is_eft:
-            merge_size = '256M'     # EFT samples with many reweight points are O(25M)
+            #merge_size = '256M'     # EFT samples with many reweight points are O(25M)
+            merge_size = '4.0G'
         else:
             merge_size = '512K'     # non-EFT samples are O(50-100k)
         print "\tFullPath:  {path}".format(path=full_path)
