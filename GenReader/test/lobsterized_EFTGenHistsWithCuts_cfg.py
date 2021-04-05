@@ -144,10 +144,11 @@ process.options = cms.untracked.PSet(
 )
 
 ####### Particle level stuff from Reza ######
-process.out = cms.OutputModule(
-    "PoolOutputModule",
-    fileName = cms.untracked.string("EDMiii.root")
-    )
+# Don't think we need to output this file
+#process.out = cms.OutputModule(
+#    "PoolOutputModule",
+#    fileName = cms.untracked.string("EDMiii.root")
+#    )
 
-process.outpath = cms.EndPath(process.out)
+#process.outpath = cms.EndPath(process.out)
 ###### End particle level stuff from Reza ######
