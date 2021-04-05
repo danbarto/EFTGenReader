@@ -538,12 +538,6 @@ def print_pdiff_info(p_dict,threshold=None):
         if p !=0:
             print "\tNon zero quad:",t,p
 
-# Prints some info about weights at some point
-# TODO: should use get_string_for_comp_2_vals
-def print_fit_eval_info(tag,orig_wgt,rwgt_wgt):
-    pdiff = get_pdiff(rwgt_wgt,orig_wgt)
-    s = "\t{tag}: orig wgt, rwgt wgt: {orig_wgt} {rwgt_wgt} -> {p}".format(tag=tag,orig_wgt=orig_wgt,rwgt_wgt=rwgt_wgt,p=pdiff)
-    print s
 
 ### Very specific functions that are probably not useful for anything besides the very specifc case they were originally used for ###
 
@@ -619,38 +613,57 @@ def find_start_pt_and_dump_to_JSON(fit_dicts,wc_lst,threshold,tag):
 # For the new start pt scan fits, and the "base" fits (i.e. TOP-19-001 start pts)
 def do_start_pt_comp(proc_lst, run_lst, all_start_pts, fit_dict_scan, orig_wgts_scan, sample_tag_scan, fit_dict_base, orig_wgts_base, sample_tag_base):
 
+    comp_var = "xsecAtStartScaleToSM"
+    #comp_var = "xsecAtStartScaleToLSs"
+
+    comp_vals= {
+        "run0" : 3.0,
+        "run1" : 3.0,
+        "run2" : 3.0,
+        "run3" : 3.0,
+        "run4" : 3.0,
+        "run5" : 3.0,
+        "run6" : 3.0,
+        "base" : 3.0,
+    }
+
     # Evaluate the fits at starting points for each sample
     for p in proc_lst:
         print "\n",p,"\n"
 
         # Get fit and orig weight for pt based on TOP-19-001 start
-        fit_base = fit_dict_base[p+"_0"]
+        fit_base = fit_dict_base[p+"_run0"]
+        if comp_var == "xsecAtStartScaleToSM":
+            fit_base = scale_fit_to_sm(fit_base)
         sname_base = reconstruct_sample_name(p,sample_tag_base,"run0")
-        orig_wgt_base = orig_wgts_base[sname_base]["xsecAtStartScaleToSM"]
+        orig_wgt_base = orig_wgts_base[sname_base][comp_var]
 
         # Loop over the 7 new start pts
         for run in run_lst:
             print run
             # Check all22WCsStartPtCheckV2dim6TopMay20GST samples
             sname = reconstruct_sample_name(p,sample_tag_scan,run)
-            #orig_wgt = orig_wgts_scan[sname] # If using the manually produced json
-            orig_wgt = orig_wgts_scan[sname]["xsecAtStartScaleToSM"] # For the automatically produced json
+            orig_wgt = orig_wgts_scan[sname][comp_var]
             for tag,fit in sorted(fit_dict_scan.iteritems()):
                 if p not in tag: continue
+                if comp_var == "xsecAtStartScaleToSM":
+                    fit = scale_fit_to_sm(fit)
                 rwgt_wgt = eval_fit(fit,all_start_pts[run][PROC_NAMES_SHORT[p]])
-                print_fit_eval_info(tag,orig_wgt,rwgt_wgt)
+                print "\t",get_string_for_comp_2_vals(tag,orig_wgt,rwgt_wgt,comp_vals[run])
             # Check all22WCsBaselineStartPtTOP19001dim6TopMay20GST samples
             rwgt_wgt_19001base = eval_fit(fit_base,all_start_pts[run][PROC_NAMES_SHORT[p]])
-            print_fit_eval_info(p+" base",orig_wgt,rwgt_wgt_19001base)
+            print "\t",get_string_for_comp_2_vals(p+" base",orig_wgt,rwgt_wgt_19001base,comp_vals[run])
 
-        # Also include  the start pt based on TOP-19-001 start pt
+        # Also include the fit with start pt based on TOP-19-001 start pt in the comparison
         print "top19001base"
         for tag,fit in fit_dict_scan.iteritems():
             if p not in tag: continue
+            if comp_var == "xsecAtStartScaleToSM":
+                fit = scale_fit_to_sm(fit)
             rwgt_wgt = eval_fit(fit,pt_top19001base[PROC_NAMES_SHORT[p]])
-            print_fit_eval_info(tag,orig_wgt_base,rwgt_wgt)
+            print "\t",get_string_for_comp_2_vals(tag,orig_wgt_base,rwgt_wgt,comp_vals["base"])
         rwgt_wgt_19001base = eval_fit(fit_base,pt_top19001base[PROC_NAMES_SHORT[p]])
-        print_fit_eval_info(p+" base",orig_wgt_base,rwgt_wgt_19001base)
+        print "\t",get_string_for_comp_2_vals(p+" base",orig_wgt_base,rwgt_wgt_19001base,comp_vals["base"])
 
 # Takes a tag and two values, returns string: "tag: v1 , v1 -> pdiff(v1,v2)"
 def get_string_for_comp_2_vals(tag,v1,v2,threshold=None):
@@ -740,13 +753,13 @@ def comp_sample_info_jsons(info_dict1,info_dict2,tag1,tag2):
             k2 = reconstruct_sample_name(p,tag2,r)
             orig_wgt_1 = info_dict1[k1]["originalXWGTUP"]
             orig_wgt_2 = info_dict2[k2]["originalXWGTUP"]
-            #print "\t{r} {info}".format(r=r,info=get_string_for_comp_2_vals("orig wgt",orig_wgt_1,orig_wgt_2,3))
+            print "\t{r} {info}".format(r=r,info=get_string_for_comp_2_vals("orig wgt",orig_wgt_1,orig_wgt_2,3))
         for r in run_lst:
             k1 = reconstruct_sample_name(p,tag1,r)
             k2 = reconstruct_sample_name(p,tag2,r)
             fit_at_sm_1 = info_dict1[k1]["fitEvalAtSM"]
             fit_at_sm_2 = info_dict2[k2]["fitEvalAtSM"]
-            print "\t{r} {info}".format(r=r,info=get_string_for_comp_2_vals("fit at sm",fit_at_sm_1,fit_at_sm_2,10))
+            #print "\t{r} {info}".format(r=r,info=get_string_for_comp_2_vals("fit at sm",fit_at_sm_1,fit_at_sm_2,10))
         for r in run_lst:
             k1 = reconstruct_sample_name(p,tag1,r)
             k2 = reconstruct_sample_name(p,tag2,r)
@@ -758,7 +771,7 @@ def comp_sample_info_jsons(info_dict1,info_dict2,tag1,tag2):
             k2 = reconstruct_sample_name(p,tag2,r)
             xsec_at_start_scale_to_ls_1 = info_dict1[k1]["xsecAtStartScaleToLSs"]
             xsec_at_start_scale_to_ls_2 = info_dict2[k2]["xsecAtStartScaleToLSs"]
-            #print "\t{r} {info}".format(r=r,info=get_string_for_comp_2_vals("xsec at start scale to ls",xsec_at_start_scale_to_ls_1,xsec_at_start_scale_to_ls_2))
+            print "\t{r} {info}".format(r=r,info=get_string_for_comp_2_vals("xsec at start scale to ls",xsec_at_start_scale_to_ls_1,xsec_at_start_scale_to_ls_2,3))
 
 pt_top19001base = {
     "ttHJet"   : combine_dicts(top19001_ttHJet_pt,for19001base_2heavy2light),
@@ -941,7 +954,8 @@ def main_for_rwgt_validaiton():
     #orig_wgts                      = open_json("fit_coeffs/start_pt_checks/","xsec_at_start_pts_by-hand-cp")
     #orig_wgts_19001base            = open_json("fit_coeffs/start_pt_checks/sample_info/old/","fit_info_all22WCsBaselineStartPtTOP19001")
     #orig_wgts_all22WCsStartPtCheck = open_json("fit_coeffs/start_pt_checks/sample_info/old/","fit_info_all22WCsStartPtCheck")
-    #orig_wgts_19001samples         = open_json("fit_coeffs/start_pt_checks/sample_info/","fit_info_top19001_samples")
+    #orig_wgts_19001samples         = open_json("fit_coeffs/start_pt_checks/sample_info/old","fit_info_top19001_samples")
+    # After adding scale by LS info
     info_all22WCsBaslineStart   = open_json("fit_coeffs/start_pt_checks/sample_info/","fit_info_all22WCsBaselineStartPtTOP19001.json")
     info_all22WCsStartPtCheck   = open_json("fit_coeffs/start_pt_checks/sample_info/","fit_info_all22WCsStartPtCheck.json")
     info_all22WCsStartPtCheckV2 = open_json("fit_coeffs/start_pt_checks/sample_info/","fit_info_all22WCsStartPtCheckV2.json")
@@ -970,7 +984,7 @@ def main_for_rwgt_validaiton():
     fits_dim6eq0                = put_all_fits_from_a_dir_into_dict("fit_coeffs/start_pt_checks/normToLS/dim6Eq0")
 
     # Compare the v0 and v1 sample info to each other
-    comp_sample_info_jsons(info_all22WCsStartPtCheck,info_all22WCsStartPtCheckV2,"all22WCsStartPtCheckdim6TopMay20GST","all22WCsStartPtCheckV2dim6TopMay20GST")
+    #comp_sample_info_jsons(info_all22WCsStartPtCheck,info_all22WCsStartPtCheckV2,"all22WCsStartPtCheckdim6TopMay20GST","all22WCsStartPtCheckV2dim6TopMay20GST")
 
     # Compare v0 and v1 sample info to the dim6eq0 samples
     #comp_sample_info_json_to_ref(info_dim6eq0,info_all22WCsStartPtCheck,"all22WCsDim6Eq0dim6TopMay20GST","all22WCsStartPtCheckdim6TopMay20GST","run0")
@@ -979,6 +993,15 @@ def main_for_rwgt_validaiton():
     # Compare the v0 and v1 fits to each other
     #comp_fits_at_pts(fits_all22WCsStartPtCheck,fits_all22WCsStartPtCheckV2,all_start_pts)
 
+    # Compare the fits at each of the other samples' starting points
+    do_start_pt_comp(
+        p_lst,run_lst,
+        all_start_pts,
+        fits_all22WCsStartPtCheck,info_all22WCsStartPtCheck,"all22WCsStartPtCheckdim6TopMay20GST",
+        fits_all22WCsBaslineStart,info_all22WCsBaslineStart,"all22WCsBaselineStartPtTOP19001dim6TopMay20GST",
+    )
+
+    '''
     # Compare the v0 and v1 coeffecients from LS norm to SM norm
     for sample in startPtScan_fits.keys():
         #print "\n",sample,"\n"
@@ -988,6 +1011,7 @@ def main_for_rwgt_validaiton():
         for run,point_dict in all_start_pts.iteritems():
             wcpt = point_dict[PROC_NAMES_SHORT[p]]
             #eval_two_fits_and_print_pdiff(sm_fit,ls_fit,wcpt)
+    '''
 
 
     '''
