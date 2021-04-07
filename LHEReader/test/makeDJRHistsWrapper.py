@@ -7,7 +7,7 @@ from EFTGenReader.GenReader.utils import clean_dir,get_files,move_files
 USE_SMPT = True; USE_REFPT = False  # SM base pt
 #USE_SMPT = False; USE_REFPT = True # Ref base pt
 
-def make_plots(sample_loc,output_fn):
+def make_plots(sample_loc,output_fn,process_name):
     if not os.path.exists(sample_loc):
         return
 
@@ -30,7 +30,8 @@ def make_plots(sample_loc,output_fn):
             l = "{fpath}\n".format(fpath=fpath)
             f.write(l)
 
-    macro_str = "makeDJRHists.C(\"{infs}\",\"{outf}\",{smpt},{refpt})".format(infs=inputs_fn,outf=output_fn,smpt=int(USE_SMPT),refpt=int(USE_REFPT))
+    #macro_str = "makeDJRHists.C(\"{infs}\",\"{outf}\",{smpt},{refpt})".format(infs=inputs_fn,outf=output_fn,smpt=int(USE_SMPT),refpt=int(USE_REFPT))
+    macro_str = "makeDJRHists.C(\"{infs}\",\"{outf}\",{smpt},{refpt},\"{process_name}\")".format(infs=inputs_fn,outf=output_fn,smpt=int(USE_SMPT),refpt=int(USE_REFPT),process_name=process_name)
     cmd = ['root','-b','-l','-q',macro_str]
 
     print 'Root Command: {0}'.format(' '.join(cmd))
@@ -89,8 +90,8 @@ def main():
     dir_loc = "/hadoop/store/user/kmohrman/summaryTree_LHE/ForPhenoJhepReviewStudies/ttZJet_sampleForDoubleCheckingQcut_dim6TopMay20GST_GEN_UL17-GEN/v1/"
     dir_list = [
         ("output_ttZJet_HanV4goodStartPtqCut15_run2" , "ttZJet_xqcut10qCut15"),
-        ("output_ttZJet_HanV4goodStartPtqCut25_run2" , "ttZJet_xquct10qCut25"),
-        ("output_ttZJet_HanV4goodStartPtqCut19_run2" , "ttZJet_xqcut10qCut19"),
+        #("output_ttZJet_HanV4goodStartPtqCut25_run2" , "ttZJet_xquct10qCut25"),
+        #("output_ttZJet_HanV4goodStartPtqCut19_run2" , "ttZJet_xqcut10qCut19"),
     ]
 
     ##################################
@@ -216,10 +217,12 @@ def main():
         print dir_name, info
         full_path = os.path.join(dir_loc,dir_name)
         print "Full path: " , full_path
+        proc = dir_name.split("_")[1]
+        print "Process name: " , proc
         #outf = 'FP_{info}_'.format(info=info) # Base pt and WC value are appended in .C file
         outf = '{info}_'.format(info=info) # Base pt and WC value are appended in .C file
         print "Name out output file:" , outf
-        make_plots(full_path,outf)
+        make_plots(full_path,outf,proc)
 
         #return # Return here if just finding xsec
         #print "TEST, this should not print !!!"
@@ -229,7 +232,7 @@ def main():
         #output_dir = '/afs/crc.nd.edu/user/k/kmohrman/www/EFT/DJRplots/testing/FP_dir_test/{outf}WCvalsAN_noctGscan_djr'.format(outf=outf)
         #output_dir = '/afs/crc.nd.edu/user/k/kmohrman/www/EFT/DJRplots/ModelFileTests/dim6top_LO_UFO_HanV4_2/noCuts/{outf}ctGScan250'.format(outf=outf)
         #output_dir = '/afs/crc.nd.edu/user/k/kmohrman/www/EFT/DJRplots/FullR2Studies/all22WCs_firstStartPtCheck_top19001pts/{outf}'.format(outf=outf)
-        output_dir = '/afs/crc.nd.edu/user/k/kmohrman/www/EFT/DJRplots/forPhenoFinalDraft/forPhenoJhepReview/ttZJet_qCutDoubleCheck/{outf}'.format(outf=outf)
+        #output_dir = '/afs/crc.nd.edu/user/k/kmohrman/www/EFT/DJRplots/forPhenoFinalDraft/forPhenoJhepReview/ttZJet_qCutDoubleCheck/{outf}'.format(outf=outf)
 
         if output_dir == '':
             timestamp_tag = datetime.datetime.now().strftime('%Y%m%d_%H%M')

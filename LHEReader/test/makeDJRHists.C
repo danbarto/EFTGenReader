@@ -23,6 +23,16 @@ void printProgress(int current_index, int total_entries, int interval=20) {
     }
 }
 
+void add_wcpts_to_dict(std::string wc_name , double min , double max , double delta , std::map<string,std::pair<string,double>> &rwgt_dict){
+    double nsteps = (max-min)/delta;
+    double wc_val;
+    for (int i = 0; i <= nsteps; i++) {
+        wc_val = min + i*delta;
+        string dict_key = wc_name + "_" + std::to_string(wc_val);
+        rwgt_dict[dict_key] = std::make_pair(wc_name,wc_val);
+    }
+}
+
 void setcanvas(TCanvas *c1, TPad **pad) {
     c1->SetLeftMargin(0.0);
     c1->SetTopMargin(0.00);
@@ -68,8 +78,8 @@ std::vector<TH1EFT*> makeTH1EFTs(const char *name, TChain *tree, int djr_idx, st
     // Set max number of events for event loop
     //int max_events = -1; // Run over all events
     //int max_events = 30000; // Debug
-    int max_events = 200000;
-    //int max_events = 100;
+    //int max_events = 200000;
+    int max_events = 100;
 
     Stopwatch sw;
     std::set<int> unique_runs;
@@ -328,11 +338,11 @@ void makeplot(WCPoint* wc_pt,  const char* xlabel, std::vector<TH1EFT*> hist_lis
     return;
 }
 
-void makeDJRHists(const TString & infile_spec, const TString & outfile, bool basePtSM, bool basePtRefPt) {
+void makeDJRHists(const TString & infile_spec, const TString & outfile, bool basePtSM, bool basePtRefPt, const TString & proc_name) {
 
     // Configure the scan
-    bool ctGscan     = true;  // Fill the dictionary if we are doing a ctG scan 
-    bool WCscan      = true;   // Fill the dictionary if we are testing all WC at their ref values
+    bool IndividualWCScan = true;  // Fill the dictionary if we are doing a scan for the ctG plus the 2light2heavy WCs
+    bool WCscan      = true;       // Fill the dictionary if we are testing all WC at their ref values
 
     if ( basePtSM == 1 and basePtRefPt == 1 ) {
         std::cout << "\nERROR: Cannot set both basePtSM and basePtRefPt to true - please choose one base point to vary the WC with respect to\n" << std::endl;
@@ -371,46 +381,39 @@ void makeDJRHists(const TString & infile_spec, const TString & outfile, bool bas
     // Return here when just finding xsec
     //return;
 
-    // Declare the dictionary (for reweighting) and always include SM and RefPt in the dictionary. Also include a point from the lims in the AN: 
+    // Declare the dictionary (for reweighting) and incude some specific wc points
     std::map<string,std::pair<string,double> > rwgt_dict; 
     rwgt_dict["SM"] = std::make_pair("",0);
     rwgt_dict["RefPt"] = std::make_pair("",0);
-    rwgt_dict["ANPt"] = std::make_pair("",0);
     rwgt_dict["LitPt"] = std::make_pair("",0);
+    rwgt_dict["arxiv1901-9wcPt"] = std::make_pair("",0);
     rwgt_dict["top19001hiPt"] = std::make_pair("",0);
-    rwgt_dict["otherPt"] = std::make_pair("",0);
-    rwgt_dict["all22Pt"] = std::make_pair("",0);
+    rwgt_dict["ttHJet30percPt"] = std::make_pair("",0);
+    rwgt_dict["ttlnuJet30percPt"] = std::make_pair("",0);
+    rwgt_dict["ttllJet30percPt"] = std::make_pair("",0);
 
-    if ( ctGscan ) {
-        string wc_name = "ctG";
-        //double min = -3.5;
-        //double max = 1.5;
-        //double delta = 0.1;
-        //double min = -250.0;
-        //double max = 250.0;
-        //double delta = 50.0;
-        double min = -5.0;
-        double max = 5.0;
-        double delta = 1.0;
-        double nsteps = (max-min)/delta;
-        double wc_val;
-        for (int i = 0; i <= nsteps; i++) {
-            wc_val = min + i*delta;
-            //std::cout << i << " " << wc_val << std::endl;
-            string dict_key = wc_name + "_" + std::to_string(wc_val);
-            rwgt_dict[dict_key] = std::make_pair(wc_name,wc_val);
-        }
+
+
+    if ( IndividualWCScan ) {
+        add_wcpts_to_dict("ctG",-4,4,2,rwgt_dict);
+        add_wcpts_to_dict("cQq13",-4,4,2,rwgt_dict);
+        add_wcpts_to_dict("cQq83",-4,4,2,rwgt_dict);
+        add_wcpts_to_dict("cQq11",-15,15,5,rwgt_dict);
+        add_wcpts_to_dict("cQq81",-15,15,5,rwgt_dict);
+        add_wcpts_to_dict("ctq1",-15,15,5,rwgt_dict);
+        add_wcpts_to_dict("ctq8",-12,12,4,rwgt_dict);
     }
 
     if ( WCscan ) {
-        std::vector<string> wc_names_vect{ "ctW", "ctp", "cpQM", "ctei", "ctli", "cQei", "ctZ", "cQlMi", "cQl3i", "ctG", "ctlTi", "cbW", "cpQ3", "cptb", "cpt", "ctlSi"};
+        std::vector<string> wc_names_vect{ "ctW", "ctp", "cpQM", "ctei", "ctli", "cQei", "ctZ", "cQlMi", "cQl3i", "ctG", "ctlTi", "cbW", "cpQ3", "cptb", "cpt", "ctlSi" , "cQq13", "cQq83", "cQq11", "ctq1" , "cQq81", "ctq8"};
+        std::vector<double> wc_vals_vect{   -1.8, -60  , -3.5  , -5.0  , 5.0   , -5.0  , 4.0  , 5.0    , -10.0  , 0.4  , 1.0    , 3.1  , 5.8   , -27.0 , 18   , -7.0    , 1.3    , 1.6    , 7.4    , 7.5    , 7.8    , 4.1   };
         //std::vector<double> ref_pt_vals_vect{ -8.303849, 64.337172, 45.883907, 24.328689, 24.43011, 23.757944, -6.093077, 23.951426, 21.540499, -3.609446, 21.809598, 49.595354, -51.106621, 136.133729, -43.552406, -20.005026}; // These are the values of the WC at the ref point
-        std::vector<double> ref_pt_vals_vect{-4.0 , 41.0 , 29.0 , 7.0 , 8.0 , 7.0 , -4.0 , 7.0 , -8.0 , -2.0 , -2.0 , -5.0 , -10.0 , -18.0 , -25.0 , -9.0}; // These numbers are from table 18 of the AN
+        //std::vector<double> ref_pt_vals_vect{-4.0 , 41.0 , 29.0 , 7.0 , 8.0 , 7.0 , -4.0 , 7.0 , -8.0 , -2.0 , -2.0 , -5.0 , -10.0 , -18.0 , -25.0 , -9.0}; // These numbers are from table 18 of the AN
         for (int i = 0; i < wc_names_vect.size(); i++) {
             //cout << wc_names_vect.at(i) << " " << ref_pt_vals_vect.at(i) << endl;
             if (basePtSM ) {
-                string dict_key = wc_names_vect.at(i) + "_" + std::to_string(ref_pt_vals_vect.at(i));
-                rwgt_dict[dict_key] = std::make_pair(wc_names_vect.at(i),ref_pt_vals_vect.at(i));
+                string dict_key = wc_names_vect.at(i) + "_" + std::to_string(wc_vals_vect.at(i));
+                rwgt_dict[dict_key] = std::make_pair(wc_names_vect.at(i),wc_vals_vect.at(i));
             } else if (basePtRefPt ) {
                 string dict_key = wc_names_vect.at(i) + "_0";
                 rwgt_dict[dict_key] = std::make_pair(wc_names_vect.at(i),0);
@@ -429,19 +432,26 @@ void makeDJRHists(const TString & infile_spec, const TString & outfile, bool bas
     // Set the WCPoint points: 
     string sm_pt_str = "";
     string ref_pt_str = "rwgt_ctW_-8.303849_ctp_64.337172_cpQM_45.883907_ctei_24.328689_ctli_24.43011_cQei_23.757944_ctZ_-6.093077_cQlMi_23.951426_cQl3i_21.540499_ctG_-3.609446_ctlTi_21.809598_cbW_49.595354_cpQ3_-51.106621_cptb_136.133729_cpt_-43.552406_ctlSi_-20.005026";
-    string an_pt_str = "rwgt_ctW_-4.0_ctp_41.0_cpQM_29.0_ctei_7.0_ctli_8.0_cQei_7.0_ctZ_-4.0_cQlMi_7.0_cQl3i_-8.0_ctG_-2.0_ctlTi_-2.0_cbW_-5.0_cpQ3_-10.0_cptb_-18.0_cpt_-25.0_ctlSi_-9.0";
-    string arxiv1901_pt_str = "rwgt_ctG_0.4_ctW_-1.8_cbW_3.1_ctZ_4.0_cptb_-27_cpQ3_5.8_cpQM_-3.5_cpt_18_ctp_-60";
+
     string top19001_hi_str = "rwgt_ctp_44.26_cpQM_21.65_ctW_2.87_ctZ_3.15_ctG_1.18_cbW_4.95_cpQ3_3.48_cptb_12.63_cpt_12.31_cQl3i_8.97_cQlMi_4.99_cQei_4.59_ctli_4.82_ctei_4.86_ctlSi_6.52_ctlTi_0.84";
-    string otherpt_str = "rwgt_ctp_25.5_cpQM_-1.07_ctW_-0.58_ctZ_-0.63_ctG_-0.85_cbW_3.17_cpQ3_-1.81_cptb_0.13_cpt_-3.25_cQl3i_-4.2_cQlMi_0.74_cQei_-0.27_ctli_0.33_ctei_0.33_ctlSi_-0.07_ctlTi_-0.01";
-    string all22on_str = "rwgt_ctG_0.4_ctW_-1.8_cbW_3.1_ctZ_4.0_cptb_-27_cpQ3_5.8_cpQM_-3.5_cpt_18_ctp_-60_cQq13_1.3_cQq83_1.6_cQq11_7.4_ctq1_7.5_cQq81_7.8_ctq8_4.1_cQl3i_-9.67_cQlMi_4.99_cQei_4.59_ctli_4.82_ctei_4.86_ctlSi_6.52_ctlTi_0.84";
+    std::string ttHJet_30perc_str   = "rwgt_cQei_100.0_cQl3i_100.0_cQlMi_100.0_cQq11_-1.25_cQq13_1.21_cQq81_2.17_cQq83_2.82_cbW_12.71_cpQ3_10.29_cpQM_-19.97_cpt_22.64_cptb_28.63_ctG_0.24_ctW_1.81_ctZ_-2.23_ctei_100.0_ctlSi_100.0_ctlTi_100.0_ctli_100.0_ctp_-2.29_ctq1_1.24_ctq8_2.03";
+    std::string ttlnuJet_30perc_str = "rwgt_cQei_100.0_cQl3i_32.13_cQlMi_56.97_cQq11_-0.66_cQq13_0.44_cQq81_0.98_cQq83_-1.0_cbW_100.0_cpQ3_7.13_cpQM_-12.98_cpt_16.12_cptb_100.0_ctG_0.94_ctW_2.14_ctZ_-12.66_ctei_100.0_ctlSi_100.0_ctlTi_20.18_ctli_100.0_ctp_-89.0_ctq1_0.67_ctq8_0.89";
+    std::string ttllJet_30perc_str  = "rwgt_cQei_-12.81_cQl3i_6.51_cQlMi_-10.06_cQq11_-0.94_cQq13_0.92_cQq81_1.7_cQq83_-2.19_cbW_12.09_cpQ3_15.15_cpQM_-2.86_cpt_3.94_cptb_42.52_ctG_0.57_ctW_2.6_ctZ_1.64_ctei_-12.88_ctlSi_-17.55_ctlTi_2.46_ctli_-9.74_ctp_100.0_ctq1_1.13_ctq8_1.87";
+
+    // Construct the point from limits from the literature
+    std::string two_heavy_lims = "ctG_0.4_ctW_-1.8_cbW_3.1_ctZ_4.0_cptb_-27_cpQ3_5.8_cpQM_-3.5_cpt_18_ctp_-60";     // From arxiv 1901
+    std::string two_quark_two_lep_lims = "ctei_-5.0_ctli_5.0_cQei_-5.0_cQlMi_5.0_cQl3i_-10.0_ctlTi_1.0_ctlSi_-7.0"; // From TOP-19-001
+    std::string two_heavy_two_light_lims = "cQq13_1.3_cQq83_1.6_cQq11_7.4_cQq81_7.8_ctq1_7.5_ctq8_4.1";             // From arxiv 1901
+    std::string lit_str = "rwgt_" + two_heavy_lims + "_" + two_heavy_two_light_lims + "_" + two_quark_two_lep_lims;
 
     WCPoint* sm_pt = new WCPoint(sm_pt_str);
     WCPoint* ref_pt = new WCPoint(ref_pt_str); 
-    WCPoint* an_pt = new WCPoint(an_pt_str);
-    WCPoint* lit_pt = new WCPoint(arxiv1901_pt_str);
-    WCPoint* top19001hi_pt = new WCPoint(top19001_hi_str);
-    WCPoint* otherpt_pt = new WCPoint(otherpt_str);
-    WCPoint* all22on_pt = new WCPoint(all22on_str);
+    WCPoint* lit_pt = new WCPoint(lit_str);
+    WCPoint* arxiv1901_9wc_pt   = new WCPoint("rwgt_"+two_heavy_lims);
+    WCPoint* top19001hi_pt      = new WCPoint(top19001_hi_str);
+    WCPoint* ttHJet_30perc_pt   = new WCPoint(ttHJet_30perc_str);
+    WCPoint* ttlnuJet_30perc_pt = new WCPoint(ttlnuJet_30perc_str);
+    WCPoint* ttllJet_30perc_pt  = new WCPoint(ttllJet_30perc_str);
     WCPoint* tmp_pt;
 
     // Set the base point: This is the point our scan changes values **with respect to** (either SM point, or ref point)
@@ -475,40 +485,50 @@ void makeDJRHists(const TString & infile_spec, const TString & outfile, bool bas
         //double wc_val = 0;
         double orig_val;
 
-        std::pair<string,double> rwgt_pair = i->second;
+        std::pair<string,double> rwgt_pair = i->second; // rwgt_pair = (wc name, wc val), note wc name is empty for the 22d points
 
         // Set the rwgt pt that gets passed to makeplot:
         if (rwgt_string_key == "SM") {
             orig_val = sm_pt->getStrength(rwgt_pair.first);
             tmp_pt = sm_pt;
             std::cout << "    SM point" << std::endl;
-            //wc_val = orig_val;
         }
+
         else if (rwgt_string_key == "RefPt") {
             orig_val = ref_pt->getStrength(rwgt_pair.first);
             tmp_pt = ref_pt;
             std::cout << "    Ref point" << std::endl;
-            //wc_val = orig_val;
-        } else if (rwgt_string_key == "ANPt") {
-            orig_val = ref_pt->getStrength(rwgt_pair.first);
-            tmp_pt = an_pt;
-            std::cout << "    AN point" << std::endl;
+
         } else if (rwgt_string_key == "LitPt") {
             orig_val = ref_pt->getStrength(rwgt_pair.first);
             tmp_pt = lit_pt;
-            std::cout << "    Literature point" << std::endl;
+            std::cout << "    Point with all 22 WCs set to values from the lit" << std::endl;
+
+        } else if (rwgt_string_key == "arxiv1901-9wcPt") {
+            orig_val = ref_pt->getStrength(rwgt_pair.first);
+            tmp_pt = arxiv1901_9wc_pt;
+            std::cout << "    Point used for pheno paper" << std::endl;
+
         } else if (rwgt_string_key == "top19001hiPt") {
             orig_val = ref_pt->getStrength(rwgt_pair.first);
             tmp_pt = top19001hi_pt;
             std::cout << "    TOP19001hi point" << std::endl;
-        } else if (rwgt_string_key == "otherPt") {
+
+        } else if (rwgt_string_key == "ttHJet30percPt"){
             orig_val = ref_pt->getStrength(rwgt_pair.first);
-            tmp_pt = otherpt_pt;
-            std::cout << "    other point" << std::endl;
-        } else if (rwgt_string_key == "all22Pt") {
+            tmp_pt = ttHJet_30perc_pt;
+            std::cout << "    ttHJet30percPt point" << std::endl;
+
+        } else if (rwgt_string_key == "ttlnuJet30percPt"){
             orig_val = ref_pt->getStrength(rwgt_pair.first);
-            tmp_pt = all22on_pt;
-            std::cout << "    all22on point" << std::endl;
+            tmp_pt = ttlnuJet_30perc_pt;
+            std::cout << "    ttlnuJet30percPt point" << std::endl;
+
+        } else if (rwgt_string_key == "ttllJet30percPt"){
+            orig_val = ref_pt->getStrength(rwgt_pair.first);
+            tmp_pt = ttllJet_30perc_pt;
+            std::cout << "    ttllJet30percPt point" << std::endl;
+
         } else {
             orig_val = base_pt->getStrength(rwgt_pair.first); 
             tmp_pt = base_pt;
