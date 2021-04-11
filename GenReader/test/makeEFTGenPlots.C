@@ -1,5 +1,7 @@
 #include "EFTGenReader/EFTHelperUtilities/interface/TH1EFT.h"
 #include "EFTGenReader/EFTHelperUtilities/interface/WCPoint.h"
+#include "EFTGenReader/EFTHelperUtilities/interface/split_string.h"
+
 
 TCanvas* findCanvas(TString search,std::vector<TCanvas*> canvs) {
     for (auto c: canvs) {
@@ -8,6 +10,11 @@ TCanvas* findCanvas(TString search,std::vector<TCanvas*> canvs) {
         }
     }
     return nullptr;
+}
+
+// Returns true if s has substr in it
+bool has_substr(TString s, TString substr){
+    return (s.Index(substr) != -1);
 }
 
 int findCanvasIndex(TString search,std::vector<TCanvas*> canvs) {
@@ -72,18 +79,22 @@ TH1D* makeRatioHistogram(TString name,T* h1,T* h2) {
 void makeEFTGenPlots(std::vector<TString> input_fnames, TString wc_string) {
 
     // Set up the type of plots we want to make
+    bool title_hists_by_proc = true;
+    bool only_wgts_plots = false;
+    bool only_anyAnaCat_plots = true;
     bool only_njets = false;
     bool only_jetPt_lepPt = false;
     bool only_SM = false;
     bool include_ratio = false;
     bool draw_sm = false; // Only really makes sense if we are only drawing one file currently
+    bool do_ks_test = false;
     std::string norm_type = "unit_norm"; //"SM_rel_norm";
     std::string plot_type = "0p_vs_1p_comp";
 
     std::vector<TFile*> files;
     TH1::SetDefaultSumw2();
 
-    std::vector<int> clrs {kBlue,kRed,kGreen,kMagenta,kCyan,kOrange,kGray,kTeal,kSpring,kPink};
+    std::vector<int> clrs {kBlue,kRed,kGreen,kMagenta,kCyan,kOrange,kGray,kBlack,kSpring,kPink};
     // TLegend parameters
     double left,right,top,bottom,scale_factor,minimum;
     if (include_ratio) {
@@ -152,13 +163,24 @@ void makeEFTGenPlots(std::vector<TString> input_fnames, TString wc_string) {
             sub_str = fname(idx+1,fname.Length());
         }
 
-        ///*
         TString leg_str;
         TString marker = "output_";
         idx_begin = sub_str.Index(marker)+marker.Length();
         idx_end = sub_str.Index(".root");
         leg_str = sub_str(idx_begin,idx_end-idx_begin);
-        //*/
+
+        // Make a legend string from the proc name and run number (a bit hard coded)
+        std::vector<std::string> words;
+        std::string proc;
+        std::string run;
+        split_string(string(leg_str),words,"_");
+        proc = words.at(0);
+        run = words.at(words.size()-2);
+        if (has_substr(leg_str,"BaselineStartPt")){
+            run = "base";
+        }
+        leg_str = proc + " " + run;
+
 
         /*
         // This legend string stuff is very specific to the names of the files and is just leftover 
@@ -228,6 +250,16 @@ void makeEFTGenPlots(std::vector<TString> input_fnames, TString wc_string) {
                     continue;
                 }
             }
+            if (only_wgts_plots){
+                if (not has_substr(s,"h_wgts")){
+                    continue;
+                }
+            }
+            if (only_anyAnaCat_plots){
+                if (not has_substr(s,"anyAnaCat")){
+                    continue;
+                }
+            }
 
             bool is_TH1EFT = false;
             bool is_TH1D = false;
@@ -248,8 +280,10 @@ void makeEFTGenPlots(std::vector<TString> input_fnames, TString wc_string) {
             h->SetMarkerSize(0.25);
             h->SetOption("E");
             h->SetMarkerColor(clrs.at(clr_idx));
-            if (only_njets){
-                h->SetTitle("");
+            std::string hist_title = proc + " " + h->GetTitle();
+            const char* hist_title_const = hist_title.c_str();
+            if (title_hists_by_proc){
+                h->SetTitle(hist_title_const);
             }
             //std::cout << "h bins: " << h->GetNbinsX() << std::endl;
             //std::cout << "h fit size: " << h->hist_fits.size() << std::endl;
@@ -323,12 +357,11 @@ void makeEFTGenPlots(std::vector<TString> input_fnames, TString wc_string) {
                 canv_pad = (TPad*)c->cd();
             }
             // Log log scale for wgt hist
-            if (s == "h_SMwgt_norm") {
+            if (has_substr(s,"h_wgts")){
                 canv_pad->SetLogy(1);
                 canv_pad->SetLogx(1);
             }
 
-            //if (s.Index("SM") == -1 and s.Index("summaryTree") == -1) { // Not all EFT hists have EFT in their name, but we assume all SM hists have SM in the name
             if (is_TH1EFT){
                 for (Int_t bin_idx = 0; bin_idx <= h->GetNbinsX()+1; bin_idx++) {
                     double wcfit_bin_val = h->GetBinFit(bin_idx).evalPoint(wc_pt);
@@ -346,7 +379,7 @@ void makeEFTGenPlots(std::vector<TString> input_fnames, TString wc_string) {
             }
             // Unit norm
             if (norm_type == "unit_norm"){
-                if (s != "h_SMwgt_norm") {
+                if (not has_substr(s,"h_wgts")){
                     Int_t nbins = h->GetNbinsX();
                     Double_t intg = h->Integral(0,nbins+1);
                     //if (intg > 1.0) { // Don't know why this check was here. It seems it should not be here.
@@ -365,19 +398,22 @@ void makeEFTGenPlots(std::vector<TString> input_fnames, TString wc_string) {
             }
 
             float KSTest;
-            KSTest = h->KolmogorovTest(h_sm_rwgt);
-            std::cout << KSTest << s << std::endl;
-            if (KSTest < 0.5) {
-                std::cout << "FLAGED!!!" << std::endl;
+            if (do_ks_test){
+                KSTest = h->KolmogorovTest(h_sm_rwgt);
+                std::cout << KSTest << s << std::endl;
+                if (KSTest < 0.5) {
+                    std::cout << "FLAGED!!!" << std::endl;
+                }
             }
 
             // Set the y axis range of the empty hist, update max_yvals_dict
             if (h->GetMaximum() > max_yvals_dict[string(s)]){
                 max_yvals_dict[string(s)] = h->GetMaximum();
-                if (string(s) != "h_SMwgt_norm"){
+                if (not has_substr(s,"h_wgts")) {
                     empty_hists_dict[string(s)]->GetYaxis()->SetRangeUser(0.0,1.2*max_yvals_dict[string(s)]);
                 } else {
-                    empty_hists_dict[string(s)]->GetYaxis()->SetRangeUser(0.1,1.2*max_yvals_dict[string(s)]);
+                    //empty_hists_dict[string(s)]->GetYaxis()->SetRangeUser(0.1,1.2*max_yvals_dict[string(s)]);
+                    empty_hists_dict[string(s)]->GetYaxis()->SetRangeUser(0.1,10*max_yvals_dict[string(s)]);
                 }
             }
 
