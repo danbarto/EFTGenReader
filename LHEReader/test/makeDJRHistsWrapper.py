@@ -87,11 +87,31 @@ def main():
     #    ("output_ttWJet_HanV4goodStartPtqCut19_run1" , "ttWJet_xqcut10qCut19"),
     #]
 
-    dir_loc = "/hadoop/store/user/kmohrman/summaryTree_LHE/ForPhenoJhepReviewStudies/ttZJet_sampleForDoubleCheckingQcut_dim6TopMay20GST_GEN_UL17-GEN/v1/"
+    #dir_loc = "/hadoop/store/user/kmohrman/summaryTree_LHE/ForPhenoJhepReviewStudies/ttZJet_sampleForDoubleCheckingQcut_dim6TopMay20GST_GEN_UL17-GEN/v1/"
+    #dir_list = [
+    #    ("output_ttZJet_HanV4goodStartPtqCut15_run2" , "ttZJet_xqcut10qCut15"),
+    #    ("output_ttZJet_HanV4goodStartPtqCut25_run2" , "ttZJet_xquct10qCut25"),
+    #    ("output_ttZJet_HanV4goodStartPtqCut19_run2" , "ttZJet_xqcut10qCut19"),
+    #]
+
+    ##################################
+
+    ### Full R2 studies qCut scan ###
+
+    dir_loc = "/hadoop/store/user/kmohrman/summaryTree_LHE/FullR2Studies/ValidationChecks/ttXJet_dim6TopMay20GST_run0StartPt_qCutScan_GEN_UL17-GEN/v1/"
     dir_list = [
-        ("output_ttZJet_HanV4goodStartPtqCut15_run2" , "ttZJet_xqcut10qCut15"),
-        #("output_ttZJet_HanV4goodStartPtqCut25_run2" , "ttZJet_xquct10qCut25"),
-        #("output_ttZJet_HanV4goodStartPtqCut19_run2" , "ttZJet_xqcut10qCut19"),
+        #("output_ttbarJet_all22WCsStartPtCheckdim6TopMay20GSTqCut15_run0", "ttbarJet_qCut15"),
+        #("output_ttbarJet_all22WCsStartPtCheckdim6TopMay20GSTqCut20_run0", "ttbarJet_qCut20"),
+        ("output_ttbarJet_all22WCsStartPtCheckdim6TopMay20GSTqCut25_run0", "ttbarJet_qCut25"),
+        ("output_ttHJet_all22WCsStartPtCheckdim6TopMay20GSTqCut15_run0", "ttHJet_qCut15"),
+        ("output_ttHJet_all22WCsStartPtCheckdim6TopMay20GSTqCut20_run0", "ttHJet_qCut20"),
+        ("output_ttHJet_all22WCsStartPtCheckdim6TopMay20GSTqCut25_run0", "ttHJet_qCut25"),
+        ("output_ttllNuNuJetNoHiggs_all22WCsStartPtCheckdim6TopMay20GSTqCut15_run0", "ttllJet_qCut15"),
+        ("output_ttllNuNuJetNoHiggs_all22WCsStartPtCheckdim6TopMay20GSTqCut20_run0", "ttllJet_qCut20"),
+        ("output_ttllNuNuJetNoHiggs_all22WCsStartPtCheckdim6TopMay20GSTqCut25_run0", "ttllJet_qCut25"),
+        ("output_ttlnuJet_all22WCsStartPtCheckdim6TopMay20GSTqCut15_run0", "ttlnuJet_qCut15"),
+        ("output_ttlnuJet_all22WCsStartPtCheckdim6TopMay20GSTqCut20_run0", "ttlnuJet_qCut20"),
+        ("output_ttlnuJet_all22WCsStartPtCheckdim6TopMay20GSTqCut25_run0", "ttlnuJet_qCut25"),
     ]
 
     ##################################
@@ -232,7 +252,7 @@ def main():
         #output_dir = '/afs/crc.nd.edu/user/k/kmohrman/www/EFT/DJRplots/testing/FP_dir_test/{outf}WCvalsAN_noctGscan_djr'.format(outf=outf)
         #output_dir = '/afs/crc.nd.edu/user/k/kmohrman/www/EFT/DJRplots/ModelFileTests/dim6top_LO_UFO_HanV4_2/noCuts/{outf}ctGScan250'.format(outf=outf)
         #output_dir = '/afs/crc.nd.edu/user/k/kmohrman/www/EFT/DJRplots/FullR2Studies/all22WCs_firstStartPtCheck_top19001pts/{outf}'.format(outf=outf)
-        #output_dir = '/afs/crc.nd.edu/user/k/kmohrman/www/EFT/DJRplots/forPhenoFinalDraft/forPhenoJhepReview/ttZJet_qCutDoubleCheck/{outf}'.format(outf=outf)
+        output_dir = '/afs/crc.nd.edu/user/k/kmohrman/www/EFT/DJRplots/FullR2_studies/ValidationChecks/qCut_scans_run0_samples/{outf}'.format(outf=outf)
 
         if output_dir == '':
             timestamp_tag = datetime.datetime.now().strftime('%Y%m%d_%H%M')
