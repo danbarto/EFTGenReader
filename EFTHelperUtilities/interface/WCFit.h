@@ -462,6 +462,30 @@ public:
         //    this->coeffs.at(i) = c_x(i);
         //}
     }
+
+    void deserialize(std::vector<std::string> in_scoeff, std::vector<float> in_vcoeff, std::vector<float> in_ecoeff) {
+        if(in_scoeff.size() != in_vcoeff.size()) {
+            std::cout << "Size mismatch! Please make sure you provide equal length coefficient vectors." << std::endl;
+            return;
+        }
+        for(size_t i = 0; i < in_scoeff.size(); i++) {
+            auto tmps = in_scoeff.at(i);
+            auto pos = tmps.find("*");
+            auto n1 = tmps.substr(0, pos);
+            auto n2 = tmps.substr(pos+1);
+            auto idx_pair = getIndexPair(n1,n2);
+            for (uint i = 0; i < this->size(); i++) {
+                if (this->pairs.at(i).first == idx_pair.first && this->pairs.at(i).second == idx_pair.second) {
+                    coeffs[i] = in_vcoeff.at(i);
+                    break;
+                }
+            }
+        }
+        for(size_t i = 0; i < in_ecoeff.size(); i++) {
+            err_coeffs[i] = in_ecoeff.at(i);
+        }
+    }
+
 };
 
 #endif
