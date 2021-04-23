@@ -39,6 +39,7 @@ class TH1EFT : public TH1D
         void DumpFits();
         
         void SetBins (Int_t nx, Double_t xmin, Double_t xmax);  // overriding virtual function from TH1
+        void SetBinFit(Int_t bin, WCFit fit);
         Bool_t Add(const TH1 *h1, Double_t c1=1); // overriding virtual function from TH1
         Long64_t Merge(TCollection* list);
 

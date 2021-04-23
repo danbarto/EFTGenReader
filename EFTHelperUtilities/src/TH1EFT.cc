@@ -27,6 +27,13 @@ void TH1EFT::SetBins(Int_t nx, Double_t xmin, Double_t xmax)
     TH1::SetBins(nx, xmin, xmax);
 }
 
+void TH1EFT::SetBinFit(Int_t bin, WCFit fit) {
+    Int_t nhists  = this->hist_fits.size();
+    if(bin == 0) underflow_fit = fit;
+    else if (bin >= nhists) overflow_fit = fit;
+    else hist_fits[bin-1] = fit;
+}
+
 // Note: Since Clone calls Copy, this should make Clone work as well
 void TH1EFT::Copy(TObject &obj) const
 {
