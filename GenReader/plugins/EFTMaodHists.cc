@@ -31,17 +31,11 @@ void EFTMaodHists::beginJob()
 
     edm::Service<TFileService> newfs;
 
-    h_maodgen_j0pt             = newfs->make<TH1EFT>("h_maodgen_j0pt","h_maodgen_j0pt",30,0,700);
-    h_maodgen_njetsclean       = newfs->make<TH1EFT>("h_maodgen_njetsclean","h_maodgen_njetsclean",12,0,12);
-    h_maodgen_nchlepsnotau     = newfs->make<TH1EFT>("h_maodgen_nchlepsnotau","h_maodgen_nchlepsnotau",8,0,8);
-    h_maodgen_sumalllepptnotau = newfs->make<TH1EFT>("h_maodgen_sumalllepptnotau","h_maodgen_sumalllepptnotau",10,0,600);
-    h_maodgen_ht               = newfs->make<TH1EFT>("h_maodgen_ht","h_maodgen_ht",20,0,1500);
-
-    h_maodpat_j0pt             = newfs->make<TH1EFT>("h_maodpat_j0pt","h_maodpat_j0pt",30,0,700);
-    h_maodpat_njetsclean       = newfs->make<TH1EFT>("h_maodpat_njetsclean","h_maodpat_njetsclean",12,0,12);
-    h_maodpat_nchlepsnotau     = newfs->make<TH1EFT>("h_maodpat_nchlepsnotau","h_maodpat_nchlepsnotau",8,0,8);
-    h_maodpat_sumalllepptnotau = newfs->make<TH1EFT>("h_maodpat_sumalllepptnotau","h_maodpat_sumalllepptnotau",10,0,600);
-    h_maodpat_ht               = newfs->make<TH1EFT>("h_maodpat_ht","h_maodpat_ht",20,0,1500);
+    h_maodgen_j0_pt      = newfs->make<TH1EFT>("h_maodgen_j0_pt","h_maodgen_j0_pt",25,0,500);
+    h_maodgen_j0_eta     = newfs->make<TH1EFT>("h_maodgen_j0_eta","h_maodgen_j0_eta",30,-3.0,3.0);
+    h_maodgen_l0_pt      = newfs->make<TH1EFT>("h_maodgen_l0_pt","h_maodgen_l0_pt",25,0,500);
+    h_maodgen_njetsclean = newfs->make<TH1EFT>("h_maodgen_njetsclean","h_maodgen_njetsclean",10,0,10);
+    h_2l2j_counts        = newfs->make<TH1D>("h_2l2j_counts","h_2l2j_counts",1,0,1);
 
 }
 
@@ -97,6 +91,7 @@ void EFTMaodHists::analyze(const edm::Event& event, const edm::EventSetup& evset
     // Gen objects, baseline cuts and cleaning
     reco::GenParticleCollection gen_leptons  = GetGenLeptons(*prunedParticles);
     gen_leptons                              = MakePtEtaCuts(gen_leptons,15.0,2.5);
+    reco::GenParticleCollection gen_e_mu     = rmParticleType(gen_leptons,{15,12,14,16});
     std::vector<reco::GenJet> gen_jets       = MakePtEtaCuts(*genJets,30.0,2.5); // Pt, eta cuts
     std::vector<reco::GenJet> gen_jets_clean = CleanGenJets(gen_jets,gen_leptons,0.4);
 
@@ -109,7 +104,15 @@ void EFTMaodHists::analyze(const edm::Event& event, const edm::EventSetup& evset
     std::vector<pat::Jet> pat_jets_clean     = CleanGenJets(pat_jets,pat_electrons,0.4); // Clean jets against e
     pat_jets_clean                           = CleanGenJets(pat_jets,pat_muons,0.4);     // Clean jets against mu
 
-    std::cout << " \nStart event:\n" << std::endl;
+    //std::cout << " \nStart event:\n" << std::endl;
+
+    // Event selection: At least two leptons (where lep means e and mu) at least two jets
+    //std::cout << gen_jets_clean.size() << " " << gen_e_mu.size() << std::endl;
+    if ( (gen_jets_clean.size() < 2) or (gen_e_mu.size() < 2) ){
+        return;
+    } else {
+        std::cout << "Event passes, njet and nlep: " << gen_jets_clean.size() << " " << gen_e_mu.size() << std::endl;
+    }
 
     // Get WC fit
     originalXWGTUP_intree = LHEInfo->originalXWGTUP();  // original cross-section
@@ -134,69 +137,39 @@ void EFTMaodHists::analyze(const edm::Event& event, const edm::EventSetup& evset
     }
     WCFit eft_fit(wc_pts,"");
 
-
-    double gen_j0_pt = 0;
+    // Loop over GEN jets
     double gen_ht = 0;
-    double gen_leppt = 0;
-    double nchlepsnotau = 0;
-
-    double pat_j0_pt = 0;
-    double pat_ht = 0;
-    double pat_leppt = 0;
-    double pat_mpt = 0;
-    double pat_ept = 0;
-
-    reco::GenParticleCollection gen_e_mu = rmParticleType(gen_leptons,{15,12,14,16});
-    //gen_leptons = rmParticleType(gen_leptons,15,12,14,16);
-
-    // GEN
     for (size_t i = 0; i < gen_jets_clean.size(); i++) {
         reco::GenJet j = gen_jets_clean.at(i);
         gen_ht = gen_ht + j.p4().Pt();
-        //std::cout << "\ngen j pt: " << j.p4().Pt() << std::endl;
         if (i == 0){
-            gen_j0_pt = j.p4().Pt();
+            h_maodgen_j0_pt->Fill(j.p4().Pt(),1.0,eft_fit);
+            h_maodgen_j0_eta->Fill(j.p4().eta(),1.0,eft_fit);
         }
     }
-    for (auto l: gen_e_mu){
-    //for (auto l: gen_leptons){
-        /*
-        if (l.charge() != 0){           // Skip nu
-            if (abs(l.pdgId()) != 15){  // Skip tau
-                gen_leppt = gen_leppt + l.p4().Pt();
-                nchlepsnotau = nchlepsnotau + 1;
-            }
-            else {
-                std::cout << "Skipping tau!" << std::endl;
-            }
+    // Loop over GEN leptons
+    for (size_t i = 0; i < gen_e_mu.size(); i++){
+        reco::GenParticle l = gen_e_mu.at(i);
+        if (i == 0){
+            h_maodgen_l0_pt->Fill(l.p4().Pt(),1.0,eft_fit);
         }
-        else {
-            std::cout << "Skipping nu!" << std::endl;
-        }
-        */
-        gen_leppt = gen_leppt + l.p4().Pt();
-        nchlepsnotau = nchlepsnotau + 1;
         if ( (abs(l.pdgId()) != 11) and (abs(l.pdgId()) != 13) ) {
             std::cout << "\nError: Not a mu or an e, not sure how this happened. Go check the logic. ID: " << l.pdgId() << "\n\n" << std::endl;
             throw std::runtime_error("");
         }
     }
 
-    //if ( (gen_jets_clean.size()>=2) and 
-    h_maodgen_j0pt->Fill(gen_j0_pt,1.0,eft_fit);
-    h_maodgen_ht->Fill(gen_ht,1.0,eft_fit);
-    h_maodgen_sumalllepptnotau->Fill(gen_leppt,1.0,eft_fit);
-
-    h_maodgen_nchlepsnotau->Fill(nchlepsnotau,1.0,eft_fit);
+    // Fill other histograms
     h_maodgen_njetsclean->Fill(gen_jets_clean.size(),1.0,eft_fit);
+    h_2l2j_counts->Fill(0.5);
 
-    // PAT
+    /*
+    // PAT: Not using this right now, but might want to some day
     for (size_t i = 0; i < pat_jets_clean.size(); i++) {
         pat::Jet j = pat_jets_clean.at(i);
         pat_ht = pat_ht + j.p4().Pt();
-        //std::cout << "\npat j pt: " << j.p4().Pt() << std::endl;
         if (i == 0){
-            pat_j0_pt = j.p4().Pt();
+            //pat_j0_pt = j.p4().Pt();
         }
     }
     for (auto e: pat_electrons){
@@ -209,16 +182,8 @@ void EFTMaodHists::analyze(const edm::Event& event, const edm::EventSetup& evset
         pat_mpt = pat_mpt + m.p4().Pt();
         //std::cout << "m: " << m.pdgId() << std::endl;
     }
-    //std::cout << "comp to sum: " << pat_ept + pat_mpt << " " << pat_leppt << std::endl;
-    h_maodpat_j0pt->Fill(pat_j0_pt,1.0,eft_fit);
-    h_maodpat_ht->Fill(pat_ht,1.0,eft_fit);
-    h_maodpat_sumalllepptnotau->Fill(pat_leppt,1.0,eft_fit);
+    */
 
-    h_maodpat_njetsclean->Fill(pat_jets_clean.size(),1.0,eft_fit);
-    h_maodpat_nchlepsnotau->Fill(pat_electrons.size()+pat_muons.size(),1.0,eft_fit);
-
-    std::cout << "max j pt: " << gen_j0_pt << " " << pat_j0_pt << std::endl;
-    //std::cout << "nleps getgenleps: " << GetGenLeptons(pat_electrons).size()+GetGenLeptons(pat_muons).size() << std::endl;
     std::cout << " " << std::endl;
 
 }

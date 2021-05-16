@@ -155,24 +155,11 @@ class EFTMaodHists: public edm::EDAnalyzer
         double total_orig_xsec;
         double total_sm_xsec;
 
-        TH1EFT* h_maodgen_j0pt;
+        TH1EFT* h_maodgen_j0_pt;
+        TH1EFT* h_maodgen_j0_eta;
+        TH1EFT* h_maodgen_l0_pt;
         TH1EFT* h_maodgen_njetsclean;
-        TH1EFT* h_maodgen_njets;
-        TH1EFT* h_maodgen_nchlepsnotau;
-        TH1EFT* h_maodgen_sumallpt;
-        TH1EFT* h_maodgen_sumalllepptnotau;
-        TH1EFT* h_maodgen_ht;
-        TH1EFT* h_maodgen_lepnotauIDs;
-        TH1EFT* h_maodgen_lepIDs;
-
-        TH1EFT* h_maodpat_j0pt;
-        TH1EFT* h_maodpat_njetsclean;
-        TH1EFT* h_maodpat_njets;
-        TH1EFT* h_maodpat_nchlepsnotau;
-        TH1EFT* h_maodpat_sumallpt;
-        TH1EFT* h_maodpat_sumalllepptnotau;
-        TH1EFT* h_maodpat_ht;
-
+        TH1D*   h_2l2j_counts;
 
 };
 
