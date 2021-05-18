@@ -9,6 +9,9 @@ options = VarParsing.VarParsing('analysis')
 
 # Setup and register default options
 options.maxEvents = 100
+options.register("singleFile","",
+    VarParsing.VarParsing.multiplicity.singleton,
+    VarParsing.VarParsing.varType.string,"name of a single root file")
 options.register("dataset","central_ttH",
     VarParsing.VarParsing.multiplicity.singleton,
     VarParsing.VarParsing.varType.string,"name of the dataset as it appears in the JSON file")
@@ -24,7 +27,7 @@ options.register("normType",1,
 options.register("intgLumi",1.0,
     VarParsing.VarParsing.multiplicity.singleton,
     VarParsing.VarParsing.varType.float,"intg. lumi to scale the histograms to (no effect for unit norm mode)")
-options.register("fnSuffix","_NoTopLeptons_output_tree",
+options.register("fnSuffix","_output_tree",
     VarParsing.VarParsing.multiplicity.singleton,
     VarParsing.VarParsing.varType.string,"string to append to the end of the output root file")
 options.register("minPtJet",-1.0,
@@ -71,10 +74,16 @@ is_eft    = ds_helper.getData(ds_name,'is_eft')
 xsec_norm = ds_helper.getData(ds_name,'central_xsec')
 datatier  = ds_helper.getData(ds_name,'datatier')
 
-#out_fname = "%s_NoTopLeptons_output_tree.root" % (ds_name)
-out_fname = "%s%s.root" % (ds_name,options.fnSuffix)
-if options.test:
+
+file_name_in = options.singleFile
+if file_name_in != "":
+    out_fname = "EFTMaodHists_output_tree.root"
+    files = ["file:"+file_name_in]
+elif options.test:
     out_fname = "TEST_output_tree.root"
+else:
+    out_fname = "%s%s.root" % (ds_name,options.fnSuffix)
+
 out_path = os.path.join("output",out_fname)
 
 print "Using Sample: %s" % (ds_name)

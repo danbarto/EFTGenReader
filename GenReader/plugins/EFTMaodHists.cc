@@ -31,10 +31,10 @@ void EFTMaodHists::beginJob()
 
     edm::Service<TFileService> newfs;
 
-    h_maodgen_j0_pt      = newfs->make<TH1EFT>("h_maodgen_j0_pt","h_maodgen_j0_pt",25,0,500);
+    h_maodgen_j0_pt      = newfs->make<TH1EFT>("h_maodgen_j0_pt","h_maodgen_j0_pt",25,0,700);
     h_maodgen_j0_eta     = newfs->make<TH1EFT>("h_maodgen_j0_eta","h_maodgen_j0_eta",30,-3.0,3.0);
     h_maodgen_l0_pt      = newfs->make<TH1EFT>("h_maodgen_l0_pt","h_maodgen_l0_pt",25,0,500);
-    h_maodgen_njetsclean = newfs->make<TH1EFT>("h_maodgen_njetsclean","h_maodgen_njetsclean",10,0,10);
+    h_maodgen_njetsclean = newfs->make<TH1EFT>("h_maodgen_njetsclean","h_maodgen_njetsclean",12,0,12);
     h_2l2j_counts        = newfs->make<TH1D>("h_2l2j_counts","h_2l2j_counts",1,0,1);
 
 }
@@ -93,7 +93,7 @@ void EFTMaodHists::analyze(const edm::Event& event, const edm::EventSetup& evset
     gen_leptons                              = MakePtEtaCuts(gen_leptons,15.0,2.5);
     reco::GenParticleCollection gen_e_mu     = rmParticleType(gen_leptons,{15,12,14,16});
     std::vector<reco::GenJet> gen_jets       = MakePtEtaCuts(*genJets,30.0,2.5); // Pt, eta cuts
-    std::vector<reco::GenJet> gen_jets_clean = CleanGenJets(gen_jets,gen_leptons,0.4);
+    std::vector<reco::GenJet> gen_jets_clean = CleanGenJets(gen_jets,gen_e_mu,0.4);
 
     // Reco objects, baseline cuts and cleaning
     std::vector<pat::Electron> pat_electrons = *patElectrons;
