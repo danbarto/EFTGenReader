@@ -109,6 +109,7 @@ class EFTMaodHists: public edm::EDAnalyzer
         template <typename T1, typename T2> double getdR(T1 p1, T2 p2);
         template <typename T> std::vector<T> MakePtEtaCuts(const std::vector<T>& input, double min_pt, double max_eta);
         template <typename T> std::vector<T> rmParticleType(const std::vector<T>& input, std::vector<int> rmid);
+        template <typename T> std::vector<T> keepParticleTypes(const std::vector<T>& input, std::vector<int> keep_id);
 
         std::ofstream fout;
         FILE * ffout;
@@ -305,6 +306,29 @@ std::vector<T> EFTMaodHists::MakePtEtaCuts(const std::vector<T>& input, double m
         ret.push_back(p);
     }
     std::sort(ret.begin(),ret.end(), [] (T a, T b) { return a.p4().Pt() > b.p4().Pt();});
+    return ret;
+}
+
+// Template function for selecting particles with a certain ID
+template <typename T>
+std::vector<T> EFTMaodHists::keepParticleTypes(const std::vector<T>& input, std::vector<int> keep_ids) {
+    std::vector<T> ret;
+    for (size_t i = 0; i < input.size(); i++) {
+        const T& p = input.at(i);
+        int p_id = p.pdgId();
+        bool keep_p = false;
+        for (auto keep_id: keep_ids) {
+            if (abs(p_id) == abs(keep_id)){
+                keep_p = true;
+            }
+        }
+        if (keep_p) {
+            ret.push_back(p);
+            //std::cout << "Keeping " << p_id << std::endl;
+        } else {
+            //std::cout << "Skipping: " << p_id << std::endl;
+        }
+    }
     return ret;
 }
 

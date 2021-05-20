@@ -31,9 +31,9 @@ void EFTMaodHists::beginJob()
 
     edm::Service<TFileService> newfs;
 
-    h_maodgen_j0_pt      = newfs->make<TH1EFT>("h_maodgen_j0_pt","h_maodgen_j0_pt",25,0,700);
-    h_maodgen_j0_eta     = newfs->make<TH1EFT>("h_maodgen_j0_eta","h_maodgen_j0_eta",30,-3.0,3.0);
-    h_maodgen_l0_pt      = newfs->make<TH1EFT>("h_maodgen_l0_pt","h_maodgen_l0_pt",25,0,500);
+    h_maodgen_j0_pt      = newfs->make<TH1EFT>("h_maodgen_j0_pt","h_maodgen_j0_pt",10,0,600);
+    h_maodgen_j0_eta     = newfs->make<TH1EFT>("h_maodgen_j0_eta","h_maodgen_j0_eta",10,-3.0,3.0);
+    h_maodgen_l0_pt      = newfs->make<TH1EFT>("h_maodgen_l0_pt","h_maodgen_l0_pt",15,0,400);
     h_maodgen_njetsclean = newfs->make<TH1EFT>("h_maodgen_njetsclean","h_maodgen_njetsclean",12,0,12);
     h_2l2j_counts        = newfs->make<TH1D>("h_2l2j_counts","h_2l2j_counts",1,0,1);
 
@@ -89,11 +89,12 @@ void EFTMaodHists::analyze(const edm::Event& event, const edm::EventSetup& evset
     event.getByToken(patJets_token_,patJets);
 
     // Gen objects, baseline cuts and cleaning
-    reco::GenParticleCollection gen_leptons  = GetGenLeptons(*prunedParticles);
-    gen_leptons                              = MakePtEtaCuts(gen_leptons,15.0,2.5);
-    reco::GenParticleCollection gen_e_mu     = rmParticleType(gen_leptons,{15,12,14,16});
-    std::vector<reco::GenJet> gen_jets       = MakePtEtaCuts(*genJets,30.0,2.5); // Pt, eta cuts
-    std::vector<reco::GenJet> gen_jets_clean = CleanGenJets(gen_jets,gen_e_mu,0.4);
+    //reco::GenParticleCollection gen_leptons  = GetGenLeptons(*prunedParticles);
+    //gen_leptons                              = MakePtEtaCuts(gen_leptons,15.0,2.5);
+    reco::GenParticleCollection gen_particles = MakePtEtaCuts(*prunedParticles,15.0,2.5);
+    reco::GenParticleCollection gen_e_mu      = keepParticleTypes(gen_particles,{11,13});
+    std::vector<reco::GenJet> gen_jets        = MakePtEtaCuts(*genJets,30.0,2.5); // Pt, eta cuts
+    std::vector<reco::GenJet> gen_jets_clean  = CleanGenJets(gen_jets,gen_e_mu,0.4);
 
     // Reco objects, baseline cuts and cleaning
     std::vector<pat::Electron> pat_electrons = *patElectrons;
@@ -106,13 +107,13 @@ void EFTMaodHists::analyze(const edm::Event& event, const edm::EventSetup& evset
 
     //std::cout << " \nStart event:\n" << std::endl;
 
-    // Event selection: At least two leptons (where lep means e and mu) at least two jets
-    //std::cout << gen_jets_clean.size() << " " << gen_e_mu.size() << std::endl;
-    if ( (gen_jets_clean.size() < 2) or (gen_e_mu.size() < 2) ){
-        return;
-    } else {
-        std::cout << "Event passes, njet and nlep: " << gen_jets_clean.size() << " " << gen_e_mu.size() << std::endl;
-    }
+    // Event ID info
+    eventnum_intree = event.id().event();
+    lumiBlock_intree = event.id().luminosityBlock();
+    runNumber_intree = event.id().run();
+    //std::cout << "\tEvt evt num:    " << eventnum_intree  << std::endl;
+    //std::cout << "\tEvt lumi block: " << lumiBlock_intree << std::endl;
+    //std::cout << "\tEvt run num:    " << runNumber_intree << std::endl;
 
     // Get WC fit
     originalXWGTUP_intree = LHEInfo->originalXWGTUP();  // original cross-section
@@ -137,54 +138,61 @@ void EFTMaodHists::analyze(const edm::Event& event, const edm::EventSetup& evset
     }
     WCFit eft_fit(wc_pts,"");
 
-    // Loop over GEN jets
-    double gen_ht = 0;
-    for (size_t i = 0; i < gen_jets_clean.size(); i++) {
-        reco::GenJet j = gen_jets_clean.at(i);
-        gen_ht = gen_ht + j.p4().Pt();
-        if (i == 0){
-            h_maodgen_j0_pt->Fill(j.p4().Pt(),1.0,eft_fit);
-            h_maodgen_j0_eta->Fill(j.p4().eta(),1.0,eft_fit);
-        }
-    }
-    // Loop over GEN leptons
-    for (size_t i = 0; i < gen_e_mu.size(); i++){
-        reco::GenParticle l = gen_e_mu.at(i);
-        if (i == 0){
-            h_maodgen_l0_pt->Fill(l.p4().Pt(),1.0,eft_fit);
-        }
-        if ( (abs(l.pdgId()) != 11) and (abs(l.pdgId()) != 13) ) {
-            std::cout << "\nError: Not a mu or an e, not sure how this happened. Go check the logic. ID: " << l.pdgId() << "\n\n" << std::endl;
-            throw std::runtime_error("");
-        }
-    }
+    // Event selection: At least two leptons (where lep means e and mu) at least two jets
+    //std::cout << "njets, nleps: " << gen_jets_clean.size() << " " << gen_e_mu.size() << std::endl;
+    if ( (gen_jets_clean.size() >= 2) and (gen_e_mu.size() >= 2) ){
 
-    // Fill other histograms
-    h_maodgen_njetsclean->Fill(gen_jets_clean.size(),1.0,eft_fit);
-    h_2l2j_counts->Fill(0.5);
-
-    /*
-    // PAT: Not using this right now, but might want to some day
-    for (size_t i = 0; i < pat_jets_clean.size(); i++) {
-        pat::Jet j = pat_jets_clean.at(i);
-        pat_ht = pat_ht + j.p4().Pt();
-        if (i == 0){
-            //pat_j0_pt = j.p4().Pt();
+        // Loop over GEN jets
+        double gen_ht = 0;
+        for (size_t i = 0; i < gen_jets_clean.size(); i++) {
+            reco::GenJet j = gen_jets_clean.at(i);
+            gen_ht = gen_ht + j.p4().Pt();
+            //std::cout << "\tj pt: " << j.p4().Pt() << std::endl;
+            if (i == 0){
+                h_maodgen_j0_pt->Fill(j.p4().Pt(),1.0,eft_fit);
+                h_maodgen_j0_eta->Fill(j.p4().eta(),1.0,eft_fit);
+            }
         }
-    }
-    for (auto e: pat_electrons){
-        pat_leppt = pat_leppt + e.p4().Pt();
-        pat_ept = pat_ept + e.p4().Pt();
-        //std::cout << "e: " << e.pdgId() << std::endl;
-    }
-    for (auto m: pat_muons){
-        pat_leppt = pat_leppt + m.p4().Pt();
-        pat_mpt = pat_mpt + m.p4().Pt();
-        //std::cout << "m: " << m.pdgId() << std::endl;
-    }
-    */
+        // Loop over GEN leptons
+        for (size_t i = 0; i < gen_e_mu.size(); i++){
+            reco::GenParticle l = gen_e_mu.at(i);
+            //std::cout << "\tl pt: " << l.p4().Pt() << std::endl;
+            if (i == 0){
+                h_maodgen_l0_pt->Fill(l.p4().Pt(),1.0,eft_fit);
+            }
+            if ( (abs(l.pdgId()) != 11) and (abs(l.pdgId()) != 13) ) {
+                std::cout << "\nError: Not a mu or an e, not sure how this happened. Go check the logic. ID: " << l.pdgId() << "\n\n" << std::endl;
+                throw std::runtime_error("");
+            }
+        }
 
-    std::cout << " " << std::endl;
+        // Fill other histograms
+        h_maodgen_njetsclean->Fill(gen_jets_clean.size(),1.0,eft_fit);
+        h_2l2j_counts->Fill(0.5);
+
+        /*
+        // PAT: Not using this right now, but might want to some day
+        for (size_t i = 0; i < pat_jets_clean.size(); i++) {
+            pat::Jet j = pat_jets_clean.at(i);
+            pat_ht = pat_ht + j.p4().Pt();
+            if (i == 0){
+                //pat_j0_pt = j.p4().Pt();
+            }
+        }
+        for (auto e: pat_electrons){
+            pat_leppt = pat_leppt + e.p4().Pt();
+            pat_ept = pat_ept + e.p4().Pt();
+            //std::cout << "e: " << e.pdgId() << std::endl;
+        }
+        for (auto m: pat_muons){
+            pat_leppt = pat_leppt + m.p4().Pt();
+            pat_mpt = pat_mpt + m.p4().Pt();
+            //std::cout << "m: " << m.pdgId() << std::endl;
+        }
+        */
+
+        std::cout << " " << std::endl;
+    }
 
 }
 
