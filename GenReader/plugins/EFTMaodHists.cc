@@ -37,6 +37,9 @@ void EFTMaodHists::beginJob()
     h_maodgen_njetsclean = newfs->make<TH1EFT>("h_maodgen_njetsclean","h_maodgen_njetsclean",12,0,12);
     h_2l2j_counts        = newfs->make<TH1D>("h_2l2j_counts","h_2l2j_counts",1,0,1);
 
+    summaryTree = newfs->make<TTree>("summaryTree","Summary Event Values");
+    tree_add_branches();
+
 }
 
 void EFTMaodHists::endJob()
@@ -138,6 +141,21 @@ void EFTMaodHists::analyze(const edm::Event& event, const edm::EventSetup& evset
     }
     WCFit eft_fit(wc_pts,"");
 
+    bool debug = false;
+    WCPoint* sm_pt = new WCPoint("smpt");
+    if (debug) {
+        for (uint i=0; i < wc_pts.size(); i++){
+            WCPoint wc_pt = wc_pts.at(i);
+            //WCpoint sm_pt = WCPoint("smpt");
+            double pt_wgt = wc_pt.wgt;
+            double fit_val = eft_fit.evalPoint(&wc_pt);
+            double sm_val  = eft_fit.evalPoint(sm_pt);
+            std::cout << std::setw(3) << i << ": " << std::setw(12) << pt_wgt << " | " << std::setw(12) << fit_val << " | " << std::setw(12) << (pt_wgt-fit_val) << std::endl;
+            std::cout << "SM val: " << sm_val << std::endl;
+        }
+    }
+    delete sm_pt;
+
     // Event selection: At least two leptons (where lep means e and mu) at least two jets
     //std::cout << "njets, nleps: " << gen_jets_clean.size() << " " << gen_e_mu.size() << std::endl;
     if ( (gen_jets_clean.size() >= 2) and (gen_e_mu.size() >= 2) ){
@@ -193,6 +211,8 @@ void EFTMaodHists::analyze(const edm::Event& event, const edm::EventSetup& evset
 
         std::cout << " " << std::endl;
     }
+
+    summaryTree->Fill();
 
 }
 

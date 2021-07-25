@@ -8,7 +8,7 @@ from EFTGenReader.GenReader.DatasetHelper import DatasetHelper
 options = VarParsing.VarParsing('analysis')
 
 # Setup and register default options
-options.maxEvents = 100
+options.maxEvents = 10
 options.register("singleFile","",
     VarParsing.VarParsing.multiplicity.singleton,
     VarParsing.VarParsing.varType.string,"name of a single root file")
@@ -79,6 +79,7 @@ file_name_in = options.singleFile
 if file_name_in != "":
     out_fname = "EFTMaodHists_output_tree.root"
     files = ["file:"+file_name_in]
+    is_eft = True
 elif options.test:
     out_fname = "TEST_output_tree.root"
 else:
