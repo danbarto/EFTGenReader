@@ -34,7 +34,7 @@
 #include "FWCore/ParameterSet/interface/FileInPath.h"
 #include "FWCore/ParameterSet/interface/ParameterSet.h"
 #include "FWCore/Framework/interface/Frameworkfwd.h"
-#include "FWCore/Framework/interface/EDAnalyzer.h"
+#include "FWCore/Framework/interface/one/EDAnalyzer.h"
 #include "FWCore/Framework/interface/ESHandle.h"
 #include "FWCore/Framework/interface/Event.h"
 #include "FWCore/Framework/interface/MakerMacros.h"
@@ -74,7 +74,7 @@ struct HistInfo {
     int h_no;
 };
 
-class EFTGenHistsWithCuts: public edm::EDAnalyzer
+class EFTGenHistsWithCuts: public edm::one::EDAnalyzer<>
 {
     private:
         // EDAnalyzer-specific:

@@ -32,7 +32,7 @@
 #include "FWCore/ParameterSet/interface/ProcessDesc.h"
 #include "FWCore/ParameterSet/interface/FileInPath.h"
 #include "FWCore/Framework/interface/Frameworkfwd.h"
-#include "FWCore/Framework/interface/EDAnalyzer.h"
+#include "FWCore/Framework/interface/one/EDAnalyzer.h"
 #include "DataFormats/Common/interface/Handle.h"
 #include "FWCore/Framework/interface/ESHandle.h"
 #include "FWCore/Framework/interface/Event.h"
@@ -63,7 +63,7 @@
 // end includes
 // -----------------------------------------------
 
-class EFTLHEReader: public edm::EDAnalyzer
+class EFTLHEReader: public edm::one::EDAnalyzer<>
 {
     private:
         // EDAnalyzer-specific:

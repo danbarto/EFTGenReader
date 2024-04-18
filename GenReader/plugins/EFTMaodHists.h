@@ -34,7 +34,7 @@
 #include "FWCore/ParameterSet/interface/FileInPath.h"
 #include "FWCore/ParameterSet/interface/ParameterSet.h"
 #include "FWCore/Framework/interface/Frameworkfwd.h"
-#include "FWCore/Framework/interface/EDAnalyzer.h"
+#include "FWCore/Framework/interface/one/EDAnalyzer.h"
 #include "FWCore/Framework/interface/ESHandle.h"
 #include "FWCore/Framework/interface/Event.h"
 #include "FWCore/Framework/interface/MakerMacros.h"
@@ -64,7 +64,7 @@
 // end includes
 // -----------------------------------------------
 
-class EFTMaodHists: public edm::EDAnalyzer
+class EFTMaodHists: public edm::one::EDAnalyzer<>
 {
     private:
         // EDAnalyzer-specific:
