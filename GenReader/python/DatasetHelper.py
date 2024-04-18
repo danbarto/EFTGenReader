@@ -16,39 +16,39 @@ class DatasetHelper(object):
         # update: If set to false, will remove any pre-existing datasets and only include ones
         #         found in the specified file
         if not os.path.exists(fn):
-            print "ERROR: Unknown file/directory: {fn}".format(fn=fn)
+            print("ERROR: Unknown file/directory: {fn}".format(fn=fn))
             return
         if not update:
             self.__datasets = {}
             self.__json_files = []
-        print "Loading JSON: {fn}".format(fn=fn)
+        print("Loading JSON: {fn}".format(fn=fn))
         self.__json_files.append(fn)
         with open(fn) as f:
             d = json.load(f)
-            for k,ds in d.iteritems():
+            for k,ds in d.items():
                 self.updateDataset(k,**ds)
 
     # Save the dataset info to a json file
     def save(self,fn):
-        print "Saving JSON: {fn}".format(fn=fn)
+        print("Saving JSON: {fn}".format(fn=fn))
         with open(fn,'w') as f:
             d = self.toDict()
             json.dump(d,f,indent=2,sort_keys=True)
 
     # Return a list of all dataset names currently loaded
     def list(self):
-        return self.__datasets.keys()
+        return list(self.__datasets.keys())
 
     # Return if the dataset name is known
     def exists(self,name):
-        return self.__datasets.has_key(name)
+        return name in self.__datasets
 
     # Print a dataset as formatted json
     def dump(self,name):
         if not self.exists(name):
             return
         ds = self.__datasets[name]
-        print json.dumps(ds.toDict(),indent=2,sort_keys=True)
+        print(json.dumps(ds.toDict(),indent=2,sort_keys=True))
 
     # Remove all datasets
     def clear(self):
@@ -60,7 +60,7 @@ class DatasetHelper(object):
             self.updateDataset(name,**kwargs)
         else:
             if self.exists(name):
-                print "ERROR: Skipping {name} since it already exists!".format(name=name)
+                print("ERROR: Skipping {name} since it already exists!".format(name=name))
                 return
             self.__datasets[name] = DSContainer(name,**kwargs)
 
@@ -118,7 +118,7 @@ class DatasetHelper(object):
         lst = []
         loc = str(ds.getData('loc'))    # converts from a unicode string object to a normal str
         if not os.path.exists(loc):
-            print "Unknown fpath: {loc}".format(loc=loc)
+            print("Unknown fpath: {loc}".format(loc=loc))
             return []
         idx = 0
         max_files = 100     # currently arbitrary
@@ -135,7 +135,7 @@ class DatasetHelper(object):
     #       DSContainer() objects
     def toDict(self):
         d = {}
-        for k,ds in self.__datasets.iteritems():
+        for k,ds in self.__datasets.items():
             d[k] = ds.toDict()
         return d
 
@@ -156,15 +156,15 @@ class DSContainer(object):
 
     # Generic setter
     def setData(self,**kwargs):
-        for k,v in kwargs.iteritems():
-            if not self.__data.has_key(k):
-                print "Unknown key in {name}: '{key}'".format(name=self.__name,key=k)
+        for k,v in kwargs.items():
+            if k not in self.__data:
+                print("Unknown key in {name}: '{key}'".format(name=self.__name,key=k))
                 continue
             self.__data[k] = v
 
     # Generic getter
     def getData(self,data_field):
-        if not self.__data.has_key(data_field):
+        if data_field not in self.__data:
             return None
         return self.__data[data_field]
 

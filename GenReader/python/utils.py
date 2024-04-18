@@ -14,7 +14,7 @@ def run_process(inputs,verbose=True,indent=0):
             break
         if l:
             stdout.append(l.strip())
-            if verbose: print indent_str+l.strip()
+            if verbose: print(indent_str+l.strip())
     return stdout
 
 # Match strings using one or more regular expressions
@@ -24,7 +24,7 @@ def regex_match(lst,regex_lst,verbose=0):
     if len(regex_lst) == 0:
         return lst[:]
     if verbose:
-        for p in regex_lst: print "rgx:",r"%s" % (p)
+        for p in regex_lst: print("rgx:",r"%s" % (p))
     for s in lst:
         for pat in regex_lst:
             m = re.search(r"%s" % (pat),s)
@@ -51,10 +51,10 @@ def move_files(files,target):
 def clean_dir(tdir,targets,dry_run=False):
     fnames = regex_match(get_files(tdir),targets)
     if len(fnames) == 0: return
-    print "Removing files from: {}".format(tdir)
-    print "\tTargets: {}".format(targets)
+    print("Removing files from: {}".format(tdir))
+    print("\tTargets: {}".format(targets))
     for fn in fnames:
         fpath = os.path.join(tdir,fn)
-        print "\tRemoving {}".format(fn)
+        print("\tRemoving {}".format(fn))
         if not dry_run:
             os.remove(fpath)

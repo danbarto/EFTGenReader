@@ -87,7 +87,7 @@ def example2(ds_helper):
                         on_das=False,
                         central_xsec=central_xsec
                     )
-                    print new_name
+                    print(new_name)
                     ds_helper.dump(new_name)
 
 # Example of modifying content of existing datasets
@@ -115,9 +115,9 @@ def main():
     ds_helper.load(DATASET_FILE)
 
     if args.list:
-        print "---Available Samples---"
+        print("---Available Samples---")
         for sample_name in sorted(ds_helper.list()):
-            print "{name}".format(name=sample_name)
+            print("{name}".format(name=sample_name))
         return
 
     #example1(ds_helper)
